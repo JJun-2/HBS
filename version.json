@@ -1,0 +1,14 @@
+{
+  "version": "1.1.0",
+  "date": "2026-11-26",
+  "notes": [
+    "표 형태 직접 입력: 검사 수량만 넣으면 입력표 자동 생성, 엑셀처럼 입력·붙여넣기",
+    "GitHub 자동 업데이트 기능",
+    "회사 로고 설정, Made By J 표시"
+  ],
+  "app": "app.html",
+  "app_sha256": "ffba03099694292bb0fc9b64094c6b99b403b61e018c2bbc1b3631b70d1e9873",
+  "launcher": "1.1.0",
+  "exe": "release/HBS_Inspection.exe",
+  "exe_sha256": "d79df1223567c79e53ef580395019f4520ed84b7b1234d12a6b53c4cdb2e423b"
+}

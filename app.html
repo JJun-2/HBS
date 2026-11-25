@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="app-version" content="1.1.0">
+<title>전수검사 데이터 분석 프로그램</title>
+<link rel="icon" href="/favicon.ico">
+<style>
+:root{
+  --bg:#f4f5f7; --surface:#ffffff; --line:#e2e4e8; --line2:#cfd3d9;
+  --text:#191919; --text2:#5f6670; --text3:#8a9099;
+  --accent:#1b64be; --accent-weak:#e8f1fc;
+  --pass:#257de0; --over:#ec4647; --under:#f2a600;
+  --good:#0a7d32; --warn:#b26b00; --bad:#c8302f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif;font-size:15px;color:var(--text);background:var(--bg);line-height:1.5}
+button,input,select,textarea{font-family:inherit;font-size:14px}
+.app-header{background:#16263d;color:#fff;padding:12px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.app-header h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.3px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{background:#fff;border-radius:6px;padding:3px 8px;height:38px;display:flex;align-items:center}
+.brand .logo img{max-height:32px;max-width:150px;display:block}
+.brand .co{font-size:12px;color:#b8c4d6;font-weight:600}
+.app-foot{max-width:1400px;margin:0 auto;padding:10px 20px 24px;color:var(--text3);font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.app-foot b{color:var(--text2)}
+.logo-prev{border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:160px;min-height:56px;display:flex;align-items:center;justify-content:center;background:#fff}
+.logo-prev img{max-height:48px;max-width:220px}
+.rlogo{display:flex;align-items:center;gap:8px;font-size:10pt;color:#333;font-weight:700;margin-bottom:6px}
+.rlogo img{max-height:13mm;max-width:45mm}
+.app-header .sub{font-size:13px;color:#b8c4d6}
+.app-header .right{margin-left:auto;font-size:13px;color:#b8c4d6}
+nav.tabs{display:flex;gap:2px;background:#fff;border-bottom:1px solid var(--line);padding:0 16px;position:sticky;top:0;z-index:20}
+nav.tabs button{border:0;background:none;padding:13px 18px;font-size:15px;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;font-weight:600}
+nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+nav.tabs button:hover{color:var(--text)}
+main{max-width:1400px;margin:0 auto;padding:18px 20px 60px}
+.panel{display:none}
+.panel.on{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .tools{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.card h3{font-size:15px;margin:14px 0 8px}
+.muted{color:var(--text2)}
+.small{font-size:13px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:120px}
+.field label{font-size:12.5px;color:var(--text2);font-weight:600}
+input[type=text],input[type=number],input[type=date],select,textarea{border:1px solid var(--line2);border-radius:6px;padding:7px 9px;background:#fff;color:var(--text)}
+input:focus,select:focus,textarea:focus{outline:2px solid #9dc8f7;border-color:var(--pass)}
+textarea{width:100%;resize:vertical}
+.btn{border:1px solid var(--line2);background:#fff;color:var(--text);border-radius:6px;padding:7px 13px;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn:hover{background:#f1f3f6}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#174f98}
+.btn.danger{color:var(--bad);border-color:#efb7b6}
+.btn.danger:hover{background:#fdf0f0}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:1000px){.grid2,.grid3{grid-template-columns:1fr}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .k{font-size:12.5px;color:var(--text2);font-weight:600}
+.kpi .v{font-size:24px;font-weight:700;margin-top:2px;letter-spacing:-.5px}
+.kpi .d{font-size:12px;color:var(--text3);margin-top:2px}
+.kpi.good .v{color:var(--good)} .kpi.warn .v{color:var(--warn)} .kpi.bad .v{color:var(--bad)}
+.chartbox{position:relative;width:100%}
+.chartbox canvas{display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--text2);margin:2px 0 6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend i.line{height:3px;border-radius:2px;vertical-align:3px;width:16px}
+.legend i.dash{height:0;border-top:2px dashed #444;border-radius:0;vertical-align:3px;width:16px;background:none!important}
+table.tbl{border-collapse:collapse;width:100%;font-size:13.5px}
+table.tbl th,table.tbl td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:middle}
+table.tbl th{background:#f7f8fa;font-weight:700;color:var(--text2);font-size:12.5px;position:sticky;top:0}
+table.tbl td.num,table.tbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.tbl tr:hover td{background:#fafbfc}
+.tblwrap{max-height:440px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:700}
+.badge.good{background:#e3f4e8;color:var(--good)} .badge.warn{background:#fff3dc;color:var(--warn)} .badge.bad{background:#fde8e8;color:var(--bad)}
+.drop{border:2px dashed var(--line2);border-radius:10px;padding:30px;text-align:center;background:#fafbfc;cursor:pointer;transition:.15s}
+.drop.over{border-color:var(--pass);background:var(--accent-weak)}
+.drop b{font-size:16px}
+.subtabs{display:flex;gap:6px;margin-bottom:12px}
+.subtabs button{border:1px solid var(--line2);background:#fff;border-radius:20px;padding:6px 16px;cursor:pointer;font-weight:600;color:var(--text2)}
+.subtabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.preview{max-height:380px;overflow:auto;border:1px solid var(--line);border-radius:8px;font-size:12.5px}
+.preview table{border-collapse:collapse}
+.preview td,.preview th{border:1px solid #edf0f3;padding:2px 6px;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.preview th{background:#f1f3f6;color:var(--text3);font-weight:600;position:sticky;top:0;z-index:1}
+.preview td.rh{background:#f1f3f6;color:var(--text3);position:sticky;left:0}
+.preview td.in{background:#e3effd}
+.preview td.in.f{background:#fde3e3}
+.preview td.title{background:#fff6dd;font-weight:700}
+.detect{background:#f7faff;border:1px solid #cfe0f6;border-radius:8px;padding:12px 14px}
+.detect .line{margin:3px 0}
+.notice{border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:14px}
+.notice.info{background:#eef5fd;border:1px solid #cfe0f6}
+.notice.warn{background:#fff7e6;border:1px solid #f3d595}
+.empty{padding:40px;text-align:center;color:var(--text2)}
+#tip{position:fixed;pointer-events:none;background:rgba(25,25,25,.92);color:#fff;font-size:12.5px;padding:6px 9px;border-radius:6px;z-index:999;display:none;white-space:nowrap;line-height:1.45}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16263d;color:#fff;padding:10px 20px;border-radius:8px;z-index:1000;display:none;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:500}
+.modal-bg.on{display:flex}
+.modal{background:#fff;border-radius:12px;padding:20px 22px;width:min(560px,92vw);max-height:90vh;overflow:auto}
+.modal h2{margin:0 0 14px;font-size:17px}
+.modal .row{margin-bottom:10px}
+.newitem{border:1px dashed var(--line2);border-radius:8px;padding:10px 12px;margin-top:10px;background:#fcfcfd}
+.hint{font-size:12.5px;color:var(--text3)}
+.upd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#e9f6ee;border:1px solid #9fd5b1;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:14px}
+.upd.err{background:#fff7e6;border-color:#f3d595}
+.upd ul{margin:2px 0 0;padding-left:18px;font-size:13px;color:var(--text2)}
+.app-foot a{color:var(--text2);cursor:pointer}
+table.cfg{border-collapse:collapse;width:100%;font-size:14px}
+table.cfg th{background:#f1f3f6;border:1px solid var(--line2);padding:8px 6px;font-weight:700;text-align:center;line-height:1.3}
+table.cfg td{border:1px solid var(--line2);padding:6px;text-align:center}
+table.cfg td input{width:100%;background:#fffbea;border:1px solid #e3d9a8;text-align:left}
+table.cfg td input[type=number]{text-align:center}
+table.cfg td.tot{font-weight:700;font-size:15px}
+.mlot{border:1px solid var(--line2);border-radius:10px;margin-bottom:16px;overflow:hidden}
+.mlot-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#eef3fa;padding:9px 14px;border-bottom:1px solid var(--line2)}
+.mlot-head b{font-size:15px}
+.mlot-head .st{font-size:13px;color:var(--text2)}
+.mlot-head .tools{margin-left:auto;display:flex;gap:6px}
+.mgrid-wrap{max-height:520px;overflow:auto}
+table.mgrid{border-collapse:collapse;font-size:13.5px}
+table.mgrid th{background:#f1f3f6;color:var(--text2);font-weight:700;border:1px solid var(--line2);padding:4px 6px;position:sticky;top:0;z-index:2;min-width:74px}
+table.mgrid th.corner{left:0;z-index:3;min-width:52px}
+table.mgrid td.rh{background:#f1f3f6;color:var(--text2);font-weight:700;border:1px solid var(--line2);text-align:center;position:sticky;left:0;z-index:1;padding:0 6px}
+table.mgrid td{border:1px solid var(--line);padding:0}
+table.mgrid input{width:74px;border:0;border-radius:0;padding:6px 6px;text-align:right;background:#fff;font-variant-numeric:tabular-nums;font-size:13.5px}
+table.mgrid input:focus{outline:2px solid var(--pass);outline-offset:-2px;background:#f2f8ff}
+table.mgrid input.over{background:#fde3e3;color:#a32020;font-weight:700}
+table.mgrid input.under{background:#fff1d0;color:#8a5a00;font-weight:700}
+table.mgrid input.err{background:#fff;outline:2px dashed #c8302f;outline-offset:-3px}
+table.mgrid tr.done td.rh{color:var(--good)}
+table.mgrid input.off{background:#eceef1;cursor:not-allowed}
+table.mgrid td.no{font-size:11px;color:var(--text3)}
+
+/* ===== 보고서 ===== */
+.rep-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+#reportArea{background:#e9ebee;padding:20px;border-radius:10px}
+.page{background:#fff;width:210mm;min-height:297mm;margin:0 auto 18px;padding:12mm 14mm;box-shadow:0 2px 10px rgba(0,0,0,.12);font-size:10.5pt;color:#111;line-height:1.45}
+.rhead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.page h1{font-size:18pt;margin:0 0 4px;letter-spacing:-.5px;flex:1}
+.page .rmeta{font-size:10pt;color:#555;margin-bottom:12px;border-bottom:2px solid #16263d;padding-bottom:8px;display:flex;gap:16px;flex-wrap:wrap}
+.page h2{font-size:12.5pt;margin:12px 0 6px;padding-left:8px;border-left:4px solid #1b64be}
+.page table{border-collapse:collapse;width:100%;font-size:9.5pt}
+.page th{white-space:nowrap}
+.page th,.page td{border:1px solid #bfc5cc;padding:5px 7px}
+.page th{background:#eef1f5;font-weight:700}
+.page td.num{text-align:right}
+.rkpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0}
+.rkpi{border:1px solid #bfc5cc;border-radius:6px;padding:5px 9px}
+.rkpi .k{font-size:9pt;color:#555}
+.rkpi .v{font-size:13.5pt;font-weight:700;white-space:nowrap}
+.rkpi.bad .v{color:#c8302f}.rkpi.good .v{color:#0a7d32}.rkpi.warn .v{color:#b26b00}
+.page img{width:100%;display:block;margin:4px 0 2px;border:1px solid #e3e6ea}
+.page .cap{font-size:9pt;color:#555;margin-bottom:8px}
+.editable{border:1px dashed transparent;border-radius:4px;padding:2px 4px;min-height:1.6em}
+.editable:hover{border-color:#9dc8f7}
+.editable:focus{outline:none;border-color:#257de0;background:#f7fbff}
+.page ul{margin:4px 0;padding-left:20px}
+.page li{margin:2px 0}
+.verdict{border:2px solid;border-radius:8px;padding:6px 12px;font-weight:700;font-size:11.5pt;margin:6px 0}
+.verdict.bad{border-color:#c8302f;color:#c8302f;background:#fdf3f3}
+.verdict.good{border-color:#0a7d32;color:#0a7d32;background:#f1faf4}
+.verdict.warn{border-color:#b26b00;color:#b26b00;background:#fffaf0}
+.sign{display:flex;justify-content:flex-end}
+.sign table{width:auto}
+.sign td,.sign th{width:22mm;text-align:center;font-size:9.5pt}
+.sign td{height:13mm}
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .app-header,nav.tabs,.no-print,#tip,#toast,.app-foot{display:none!important}
+  main{padding:0;max-width:none}
+  #reportArea{background:none;padding:0}
+  .page{box-shadow:none;margin:0;page-break-after:always;width:210mm;min-height:auto}
+  .page:last-child{page-break-after:auto}
+  .editable{border:0!important}
+  .panel:not(#p-report){display:none!important}
+}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <div class="brand"><div class="logo" id="hdrLogoBox" style="display:none"><img id="hdrLogo" alt="회사 로고"></div><div><div class="co" id="hdrCo"></div><h1>전수검사 데이터 분석 프로그램</h1></div></div>
+  <span class="sub">품목별 검사 데이터 누적 · 대시보드 · 보고서</span>
+  <span class="right" id="hdrInfo"></span>
+</div>
+<nav class="tabs" id="tabs">
+  <button data-t="dash" class="on">대시보드</button>
+  <button data-t="input">데이터 입력</button>
+  <button data-t="report">보고서</button>
+  <button data-t="data">데이터 관리</button>
+  <button data-t="items">품목 설정</button>
+  <button data-t="help">사용법</button>
+</nav>
+<main>
+<div id="updBanner"></div>
+
+<!-- ================= 대시보드 ================= -->
+<section class="panel on" id="p-dash">
+  <div id="backupNotice"></div>
+  <div class="card no-print">
+    <div class="row">
+      <div class="field" style="min-width:220px"><label>품목</label><select id="fItem"></select></div>
+      <div class="field"><label>시작일</label><input type="date" id="fFrom"></div>
+      <div class="field"><label>종료일</label><input type="date" id="fTo"></div>
+      <div class="field"><label>빠른 선택</label>
+        <div class="row" style="gap:4px">
+          <button class="btn sm" data-q="all">전체</button>
+          <button class="btn sm" data-q="7">최근 7일</button>
+          <button class="btn sm" data-q="30">최근 30일</button>
+          <button class="btn sm" data-q="month">이번 달</button>
+        </div>
+      </div>
+      <label class="small" style="display:flex;align-items:center;gap:5px;margin-bottom:8px"><input type="checkbox" id="fExcl"> 극단값(측정 오류 의심)은 평균·표준편차 계산에서 제외</label>
+    </div>
+  </div>
+  <div id="dashBody"></div>
+</section>
+
+<!-- ================= 데이터 입력 ================= -->
+<section class="panel" id="p-input">
+  <div class="card">
+    <h2>1. 측정 데이터 가져오기</h2>
+    <div class="subtabs" id="inTabs">
+      <button data-m="file" class="on">엑셀 파일 넣기</button>
+      <button data-m="paste">복사·붙여넣기</button>
+      <button data-m="manual">직접 입력 (표)</button>
+    </div>
+    <div id="in-file">
+      <div class="drop" id="drop">
+        <b>여기에 엑셀 파일(.xlsx)을 끌어다 놓으세요</b><br>
+        <span class="muted small">또는 클릭해서 파일 선택 · .xlsx / .xlsm / .csv 지원 (구형 .xls는 엑셀에서 .xlsx로 다시 저장 후 사용)</span>
+        <input type="file" id="fileIn" accept=".xlsx,.xlsm,.csv,.txt" style="display:none">
+      </div>
+      <div class="row" id="sheetRow" style="margin-top:10px;display:none">
+        <div class="field" style="min-width:260px"><label>시트 선택</label><select id="sheetSel"></select></div>
+        <span class="muted small" id="fileName" style="margin-bottom:8px"></span>
+      </div>
+    </div>
+    <div id="in-manual" style="display:none"><p class="muted small" style="margin:0">아래에서 검사 정보를 넣고 로트별 <b>검사 수량</b>만 입력하면, 엑셀처럼 칸이 나뉜 입력표가 자동으로 만들어집니다.</p></div>
+    <div id="in-paste" style="display:none">
+      <p class="muted small" style="margin:0 0 6px">엑셀에서 측정값 영역을 마우스로 드래그 → <b>Ctrl+C</b> → 아래 칸 클릭 → <b>Ctrl+V</b>. 제목(규격)과 번호 머리행까지 같이 복사하면 규격·범위를 자동으로 잡습니다.<br>숫자만 직접 칠 때는 띄어쓰기, 쉼표, 줄바꿈 어느 것으로 구분해도 됩니다.</p>
+      <textarea id="pasteBox" rows="9" placeholder="예) 엑셀에서 복사한 내용 붙여넣기&#10;또는  35.13 35.43 35.28 34.65 ..."></textarea>
+      <div class="row" style="margin-top:6px"><button class="btn" id="pasteClear">지우기</button></div>
+    </div>
+  </div>
+
+  <div id="manualWrap" style="display:none">
+    <div class="card">
+      <h2>2. 검사 정보</h2>
+      <div class="row">
+        <div class="field" style="min-width:240px"><label>품목</label><select id="mItem"></select></div>
+        <div class="field" style="min-width:280px;flex:1"><label>검사 제목</label><input type="text" id="mTitle" placeholder="예) OF051B 중량 전수검사"></div>
+        <div class="field"><label>검사일</label><input type="date" id="mDate"></div>
+        <div class="field"><label>검사자</label><input type="text" id="mInsp" style="width:110px"></div>
+        <div class="field"><label>라인/설비</label><input type="text" id="mLine" style="width:110px"></div>
+      </div>
+      <div class="newitem" id="mNewBox" style="display:none">
+        <b class="small">새 품목 정보</b>
+        <div class="row" style="margin-top:6px">
+          <div class="field"><label>품목명</label><input type="text" id="mnName" style="width:200px"></div>
+          <div class="field"><label>품번/코드</label><input type="text" id="mnCode" style="width:120px"></div>
+          <div class="field"><label>측정 항목</label><input type="text" id="mnProp" style="width:100px" value="중량"></div>
+          <div class="field"><label>단위</label><input type="text" id="mnUnit" style="width:70px" placeholder="g"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="field"><label>규격 하한 (LSL)</label><input type="number" step="any" id="mLsl" style="width:120px"></div>
+        <div class="field"><label>규격 상한 (USL)</label><input type="number" step="any" id="mUsl" style="width:120px"></div>
+        <span class="hint" style="margin-bottom:8px">규격을 넣으면 입력하는 즉시 규격 밖 칸이 빨갛게 표시됩니다.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. 검사 수량 설정 <span class="tools"><span class="hint">수량을 넣으면 아래 입력표가 바로 만들어집니다</span></span></h2>
+      <table class="cfg" id="mCfg">
+        <thead><tr><th style="width:70px">구분</th><th>로트 명칭</th><th style="width:130px">검사 수량<br><span class="hint">(개)</span></th><th style="width:110px">한 줄 칸 수</th><th style="width:130px">만들어질 표</th><th>조건 메모</th><th style="width:70px"></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="mAddLot">+ 로트 추가</button>
+        <button class="btn" id="mBuild">표 다시 만들기</button>
+        <span class="hint" style="margin-bottom:6px">예) 검사 수량 1,989개 · 한 줄 10칸 → 199줄 표가 자동으로 만들어지고, 마지막 줄의 남는 칸은 회색으로 막힙니다. 수량을 바꿔도 이미 입력한 값은 그대로 남습니다.</span>
+      </div>
+    </div>
+
+    <div class="card" id="mGridCard" style="display:none">
+      <h2>4. 측정값 입력 <span class="tools"><span class="small muted" id="mSaved"></span></span></h2>
+      <div class="notice info small" style="margin-bottom:12px"><b>Enter</b> 다음 칸 · <b>Shift+Enter</b> 이전 칸 · <b>방향키</b> 상하좌우 이동 · 엑셀에서 여러 칸을 복사해 아무 칸에 <b>Ctrl+V</b> 하면 그 칸부터 표 모양대로 채워집니다. 입력 중인 내용은 자동으로 임시 저장됩니다.</div>
+      <div id="mGrids"></div>
+      <div class="row" style="margin-top:14px;align-items:center">
+        <button class="btn primary" id="mReg" style="padding:10px 26px;font-size:15px">입력한 로트 등록</button>
+        <button class="btn danger" id="mClear">입력값 모두 지우기</button>
+        <span id="mRegMsg" class="small"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="parseCard" style="display:none">
+    <h2>2. 인식 결과 확인 <span class="tools"><button class="btn sm" id="copyVals">인식된 측정값 복사</button></span></h2>
+    <div class="grid2">
+      <div>
+        <div class="detect" id="detectBox"></div>
+        <div class="row" style="margin-top:10px">
+          <div class="field"><label>데이터 범위 (엑셀 주소)</label><input type="text" id="rangeIn" style="width:150px" placeholder="B7:K2085"></div>
+          <div class="field"><label>읽는 순서</label><select id="orderIn"><option value="row">가로 먼저 (1행 1→10, 2행 …)</option><option value="col">세로 먼저 (A열 위→아래, B열 …)</option></select></div>
+          <label class="small" style="display:flex;align-items:center;gap:5px;margin-bottom:8px"><input type="checkbox" id="zeroIn" checked> 0 값 제외</label>
+          <button class="btn" id="reDetect" style="margin-bottom:1px">자동 인식 다시</button>
+        </div>
+        <p class="hint">범위를 고치면 바로 다시 읽습니다. 미리보기에서 파란 칸이 측정값, 빨간 칸은 규격 밖 값, 노란 칸은 제목으로 잡힌 셀입니다.</p>
+      </div>
+      <div>
+        <div class="preview" id="previewBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="regCard" style="display:none">
+    <h2>3. 등록 정보</h2>
+    <div class="row">
+      <div class="field" style="min-width:240px"><label>품목</label><select id="rItem"></select></div>
+      <div class="field"><label>검사일</label><input type="date" id="rDate"></div>
+      <div class="field"><label>로트/배치 번호</label><input type="text" id="rLot" style="width:170px"></div>
+      <div class="field"><label>검사자</label><input type="text" id="rInsp" style="width:110px"></div>
+      <div class="field"><label>라인/설비</label><input type="text" id="rLine" style="width:110px"></div>
+    </div>
+    <div class="newitem" id="newItemBox" style="display:none">
+      <b class="small">새 품목 정보</b>
+      <div class="row" style="margin-top:6px">
+        <div class="field"><label>품목명</label><input type="text" id="nName" style="width:200px"></div>
+        <div class="field"><label>품번/코드</label><input type="text" id="nCode" style="width:120px"></div>
+        <div class="field"><label>측정 항목</label><input type="text" id="nProp" style="width:100px" value="중량"></div>
+        <div class="field"><label>단위</label><input type="text" id="nUnit" style="width:70px"></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div class="field"><label>규격 하한 (LSL)</label><input type="number" step="any" id="rLsl" style="width:120px"></div>
+      <div class="field"><label>규격 상한 (USL)</label><input type="number" step="any" id="rUsl" style="width:120px"></div>
+      <div class="field" style="flex:1;min-width:240px"><label>메모 (특이사항)</label><input type="text" id="rMemo"></div>
+    </div>
+    <p class="hint">규격은 이 로트에 그대로 저장됩니다. 나중에 품목 규격이 바뀌어도 이미 등록한 로트의 판정은 바뀌지 않습니다. 한쪽 규격만 있으면 다른 쪽은 비워두세요.</p>
+    <div class="row"><button class="btn primary" id="regBtn" style="padding:10px 26px;font-size:15px">데이터 등록</button><span id="regMsg" class="small"></span></div>
+  </div>
+</section>
+
+<!-- ================= 보고서 ================= -->
+<section class="panel" id="p-report">
+  <div class="card no-print">
+    <h2>보고서 조건</h2>
+    <div class="row">
+      <div class="field" style="min-width:220px"><label>품목</label><select id="rpItem"></select></div>
+      <div class="field"><label>시작일</label><input type="date" id="rpFrom"></div>
+      <div class="field"><label>종료일</label><input type="date" id="rpTo"></div>
+      <div class="field" style="min-width:280px"><label>보고서 제목</label><input type="text" id="rpTitle"></div>
+      <div class="field"><label>작성자</label><input type="text" id="rpAuthor" style="width:150px"></div>
+      <div class="field"><label>보고일</label><input type="date" id="rpDate"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="small"><input type="checkbox" id="rpLogo" checked> 회사 로고·회사명 넣기</label>
+      <label class="small"><input type="checkbox" id="rpSign" checked> 결재란 넣기</label>
+      <label class="small"><input type="checkbox" id="rpExcl"> 극단값은 평균·표준편차에서 제외</label>
+      <label class="small"><input type="checkbox" id="rpLotTbl" checked> 로트별 상세표 넣기</label>
+    </div>
+    <div id="rpLots" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="rpMake">보고서 만들기</button></div>
+  </div>
+  <div class="rep-toolbar no-print" id="rpTools" style="display:none">
+    <button class="btn primary" id="rpPrint">인쇄 / PDF 저장</button>
+    <button class="btn" id="rpHtml">보고서 파일 다운로드 (HTML)</button>
+    <button class="btn" id="rpCopyText">분석 내용 복사</button>
+    <button class="btn" id="rpCopyTbl">요약표 복사 (엑셀 붙여넣기용)</button>
+    <span class="hint" style="align-self:center">점선 상자 안 문장은 클릭해서 바로 고칠 수 있습니다. PDF는 인쇄 창에서 대상 'PDF로 저장' 선택.</span>
+  </div>
+  <div id="reportArea"><div class="empty">조건을 고르고 [보고서 만들기]를 누르세요.</div></div>
+</section>
+
+<!-- ================= 데이터 관리 ================= -->
+<section class="panel" id="p-data">
+  <div class="card">
+    <h2>회사 정보 · 로고</h2>
+    <div class="row" style="align-items:center">
+      <div class="logo-prev" id="logoPrev"><span class="muted small">로고 없음</span></div>
+      <div class="field" style="min-width:240px"><label>회사명</label><input type="text" id="coName" placeholder="(주)한부솔루션"></div>
+      <button class="btn" id="logoPick">로고 이미지 넣기</button>
+      <button class="btn danger" id="logoDel">로고 지우기</button>
+      <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/gif,image/bmp,image/webp" style="display:none">
+    </div>
+    <p class="hint">PNG·JPG·SVG 가능. 배경이 투명한 PNG가 가장 깔끔합니다. 로고와 회사명은 프로그램 상단과 보고서 첫 장에 들어갑니다.</p>
+  </div>
+  <div class="card">
+    <h2>백업 · 내보내기</h2>
+    <div class="notice info small" id="storeNotice" style="margin-bottom:10px">데이터는 이 PC의 이 브라우저(크롬/엣지) 안에 저장됩니다. 브라우저 기록 삭제나 PC 교체 시 사라질 수 있으니 <b>백업 파일 저장</b>을 주기적으로 눌러 공유 폴더 등에 보관하세요. 다른 PC에서는 같은 프로그램 파일을 열고 <b>백업 불러오기</b>로 이어서 쓰면 됩니다.</div>
+    <div class="row">
+      <button class="btn primary" id="bkSave">백업 파일 저장 (.json)</button>
+      <button class="btn" id="bkLoad">백업 불러오기 (합치기)</button>
+      <button class="btn" id="bkReplace">백업 불러오기 (덮어쓰기)</button>
+      <input type="file" id="bkFile" accept=".json" style="display:none">
+      <button class="btn" id="csvRaw">측정값 전체 CSV</button>
+      <button class="btn" id="csvLot">로트 요약 CSV</button>
+      <button class="btn" id="copyLot">로트 요약 복사</button>
+      <button class="btn" id="openFolder" style="display:none">데이터 폴더 열기</button>
+      <button class="btn" id="updCheck2">업데이트 확인</button>
+      <button class="btn danger" id="wipe" style="margin-left:auto">전체 데이터 삭제</button>
+    </div>
+    <p class="small muted" id="storeInfo" style="margin:10px 0 0"></p>
+  </div>
+  <div class="card">
+    <h2>등록된 검사 로트 <span class="tools"><select id="dmItem"></select></span></h2>
+    <div class="tblwrap" id="lotTable"></div>
+  </div>
+</section>
+
+<!-- ================= 품목 설정 ================= -->
+<section class="panel" id="p-items">
+  <div class="card">
+    <h2>품목 목록 <span class="tools"><button class="btn primary sm" id="addItem">품목 추가</button></span></h2>
+    <div class="tblwrap" id="itemTable"></div>
+    <p class="hint">여기서 바꾼 규격은 앞으로 등록하는 로트에 적용됩니다. 이미 등록된 로트의 규격까지 바꾸려면 저장할 때 나오는 질문에 [확인]을 누르세요.</p>
+  </div>
+</section>
+
+<!-- ================= 사용법 ================= -->
+<section class="panel" id="p-help">
+  <div class="card" style="max-width:900px">
+    <h2>사용법</h2>
+    <h3>데이터 넣기</h3>
+    <ul>
+      <li><b>엑셀 파일</b>: [데이터 입력] 탭에서 파일을 끌어다 놓거나 클릭해서 고릅니다. 제목 셀에 <code>OF051B 중량 체크 (28~34.02g)</code>처럼 규격을 적어두면 품목명·규격·단위를 자동으로 읽습니다.</li>
+      <li><b>번호 머리행</b>: 1, 2, 3 … 10처럼 번호가 붙은 행이 있으면 그 아래 칸을 측정값으로 잡고, 맨 왼쪽 순번 열과 옆의 계산 칸(통과 제품 중량 등)은 빼고 읽습니다.</li>
+      <li><b>복사·붙여넣기</b>: 엑셀에서 영역을 드래그해 Ctrl+C, 입력 칸에 Ctrl+V. 파일과 똑같이 인식합니다.</li>
+      <li>자동 인식이 틀리면 <b>데이터 범위</b>(예: B7:K2085)와 <b>읽는 순서</b>를 직접 고치면 됩니다.</li>
+      <li>같은 날 같은 품목을 여러 번 검사했다면 로트 번호만 다르게 해서 각각 등록하세요.</li>
+    </ul>
+    <h3>판정 기준</h3>
+    <ul>
+      <li>규격 하한 ≤ 측정값 ≤ 규격 상한이면 합격. 경계값(예: 34.02)은 합격입니다.</li>
+      <li><b>Cpk</b>: 공정능력지수. 1.33 이상 양호, 1.00~1.33 관리 필요, 1.00 미만 능력 부족. 음수면 평균 자체가 규격 밖에 있다는 뜻입니다.</li>
+      <li><b>극단값</b>: 규격 밖이면서 중앙값에서 표준편차 5배 넘게 떨어진 값. 저울 오류나 기록 실수일 가능성이 높아 따로 표시합니다. 합격·불합격 수량에는 그대로 포함됩니다.</li>
+      <li><b>중심 맞춤 시 예상 합격률</b>: 지금 산포 그대로 평균만 규격 중앙으로 옮겼을 때 정규분포로 계산한 추정치입니다.</li>
+    </ul>
+    <h3>보관</h3>
+    <ul>
+      <li>인터넷 연결이 필요 없습니다. 모든 처리는 이 PC 안에서만 이뤄집니다.</li>
+      <li>검사 데이터는 프로그램(exe) 옆 <b>data\inspection_data.json</b> 파일에 자동 저장되고, 하루 한 번 <b>data\backup</b> 폴더에 날짜별 사본이 남습니다 (최근 60개 보관).</li>
+      <li>다른 PC로 옮길 때는 exe와 data 폴더를 통째로 복사하면 그대로 이어서 쓸 수 있습니다.</li>
+      <li>회사 로고와 회사명은 [데이터 관리] 탭에서 바꿉니다.</li>
+    </ul>
+    <p class="muted small" style="margin-top:18px">Made By J</p>
+  </div>
+</section>
+</main>
+
+<footer class="app-foot"><span>전수검사 데이터 분석 프로그램 <span id="verInfo"></span> · <a id="updCheck">업데이트 확인</a> <span id="updState"></span></span><span>Made By <b>J</b></span></footer>
+<div class="modal-bg" id="modal"><div class="modal" id="modalBody"></div></div>
+<div id="tip"></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   공통 유틸
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const C={pass:'#257de0',over:'#ec4647',under:'#f2a600',mean:'#191919',spec:'#444',grid:'#eceef1',axis:'#8a9099',text:'#5f6670',band:'rgba(37,125,224,0.07)'};
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function addDays(s,n){const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmt(v,d){if(v==null||!isFinite(v))return '-';return Number(v).toLocaleString('ko-KR',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fint(v){return v==null?'-':Number(v).toLocaleString('ko-KR');}
+function pct(v,d=1){return v==null||!isFinite(v)?'-':v.toFixed(d)+'%';}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2600);}
+function numOf(v){
+  if(typeof v==='number')return isFinite(v)?v:null;
+  if(typeof v!=='string')return null;
+  const s=v.trim().replace(/,/g,'');
+  if(!/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(s))return null;
+  return parseFloat(s);
+}
+function decOf(vals){const cnt=[0,0,0,0];for(let i=0;i<Math.min(vals.length,500);i++){const s=String(vals[i]);const p=s.indexOf('.');cnt[Math.min(3,p>=0?s.length-p-1:0)]++;}let best=0;cnt.forEach((c,i)=>{if(c>cnt[best]||(c===cnt[best]&&i>best))best=i;});return best;}
+function download(name,data,type){
+  const blob=data instanceof Blob?data:new Blob([data],{type:type||'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+}
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);toast('복사했습니다');}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');toast('복사했습니다');}catch(_){alert('복사에 실패했습니다');}ta.remove();}
+}
+async function copyCanvas(cv){
+  try{
+    const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('그래프 이미지를 복사했습니다 (붙여넣기 가능)');
+  }catch(e){alert('이 브라우저에서는 이미지 복사가 막혀 있습니다. [PNG 저장]을 이용하세요.');}
+}
+function colName(c){let s='';c++;while(c>0){const m=(c-1)%26;s=String.fromCharCode(65+m)+s;c=Math.floor((c-1)/26);}return s;}
+function colIdx(s){let n=0;for(const ch of s.toUpperCase())n=n*26+(ch.charCodeAt(0)-64);return n-1;}
+function parseRange(s){
+  const m=String(s||'').trim().toUpperCase().match(/^([A-Z]+)(\d+)\s*[:~]\s*([A-Z]+)(\d+)$/);
+  if(!m)return null;
+  let r0=+m[2]-1,r1=+m[4]-1,c0=colIdx(m[1]),c1=colIdx(m[3]);
+  if(r0>r1)[r0,r1]=[r1,r0];if(c0>c1)[c0,c1]=[c1,c0];
+  return {r0,r1,c0,c1};
+}
+function rangeStr(r){return colName(r.c0)+(r.r0+1)+':'+colName(r.c1)+(r.r1+1);}
+// 정규분포 누적
+function erf(x){const s=Math.sign(x);x=Math.abs(x);const t=1/(1+0.3275911*x);const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+function Phi(z){return 0.5*(1+erf(z/Math.SQRT2));}
+
+/* =========================================================
+   저장소
+   ========================================================= */
+const KEY='insp_dash_v1';
+let DB={items:[],lots:[],meta:{}};
+let SERVER=null; // 실행 파일(exe)로 열었을 때: 데이터 파일 저장
+const TOKEN='__JTOKEN__'; // 실행 파일이 화면을 내보낼 때 채워 넣는 확인 값
+async function load(){
+  try{const r=await fetch('/api/info',{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&j.app==='JINSPECT-1')SERVER=j;}}catch(e){}
+  if(SERVER){
+    try{const r=await fetch('/api/db',{cache:'no-store'});const j=await r.json();if(j)DB=j;}catch(e){alert('데이터 파일을 읽지 못했습니다.\n'+e.message);}
+  }else{
+    try{const s=localStorage.getItem(KEY);if(s)DB=JSON.parse(s);}catch(e){console.warn(e);}
+  }
+  DB.items=DB.items||[];DB.lots=DB.lots||[];DB.meta=DB.meta||{};
+  if(DB.meta.company==null)DB.meta.company='(주)한부솔루션';
+}
+let saveChain=Promise.resolve(),saveFailShown=false;
+function save(){
+  if(SERVER){
+    const body=JSON.stringify(DB);
+    saveChain=saveChain.then(()=>fetch('/api/db',{method:'POST',headers:{'Content-Type':'application/json','X-Token':TOKEN},body}))
+      .then(async r=>{if(!r.ok)throw new Error(await r.text());saveFailShown=false;})
+      .catch(e=>{if(!saveFailShown){saveFailShown=true;alert('데이터 파일 저장에 실패했습니다.\n프로그램 창을 모두 닫고 다시 실행해 주세요.\n\n'+e.message);}});
+    return true;
+  }
+  try{localStorage.setItem(KEY,JSON.stringify(DB));return true;}
+  catch(e){alert('브라우저 저장 공간이 부족합니다.\n[데이터 관리]에서 백업 파일을 저장한 뒤 오래된 로트를 지우세요.');return false;}
+}
+function applyBrand(){
+  const lg=DB.meta.logo,co=DB.meta.company||'';
+  $('#hdrLogoBox').style.display=lg?'':'none';if(lg)$('#hdrLogo').src=lg;
+  $('#hdrCo').textContent=co;
+  $('#logoPrev').innerHTML=lg?`<img src="${lg}" alt="로고">`:'<span class="muted small">로고 없음</span>';
+  if(document.activeElement!==$('#coName'))$('#coName').value=co;
+  document.title=(co?co+' · ':'')+'전수검사 데이터 분석 프로그램';
+}
+const itemById=id=>DB.items.find(i=>i.id===id);
+function itemLabel(it){if(!it)return '(삭제된 품목)';return it.code&&it.code!==it.name?`${it.name} [${it.code}]`:it.name;}
+function specText(lsl,usl,unit){
+  unit=unit||'';
+  if(lsl!=null&&usl!=null)return `${lsl} ~ ${usl}${unit}`;
+  if(lsl!=null)return `${lsl}${unit} 이상`;
+  if(usl!=null)return `${usl}${unit} 이하`;
+  return '규격 없음';
+}
+function lotsOf(itemId,from,to){
+  return DB.lots.filter(l=>(!itemId||itemId==='__all'||l.itemId===itemId)&&(!from||l.date>=from)&&(!to||l.date<=to))
+    .sort((a,b)=>a.date===b.date?(a.createdAt||0)-(b.createdAt||0):a.date<b.date?-1:1);
+}
+
+/* =========================================================
+   통계
+   ========================================================= */
+function judgeCounts(vals,lsl,usl){
+  let pass=0,over=0,under=0;
+  for(const v of vals){if(usl!=null&&v>usl)over++;else if(lsl!=null&&v<lsl)under++;else pass++;}
+  return {pass,over,under};
+}
+// lots: [{values,lsl,usl}] → 로트별 규격으로 판정, 산포 통계는 합쳐서
+function calc(lots,opt){
+  opt=opt||{};
+  let all=[];let pass=0,over=0,under=0;
+  for(const l of lots){const j=judgeCounts(l.values,l.lsl,l.usl);pass+=j.pass;over+=j.over;under+=j.under;all=all.concat(l.values);}
+  const n=all.length;if(!n)return null;
+  const lsl=opt.lsl!==undefined?opt.lsl:(lots.length?lots[lots.length-1].lsl:null);
+  const usl=opt.usl!==undefined?opt.usl:(lots.length?lots[lots.length-1].usl:null);
+  const sorted=Float64Array.from(all).sort();
+  const q=p=>{const i=(n-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo);};
+  const median=q(.5);
+  let s0=0;for(const v of all)s0+=v;const m0=s0/n;let ss0=0;for(const v of all)ss0+=(v-m0)**2;const sd0=n>1?Math.sqrt(ss0/(n-1)):0;
+  // 극단값: 규격 밖 + 중앙값에서 5σ 초과
+  const outliers=[];
+  all.forEach((v,i)=>{const oos=(usl!=null&&v>usl)||(lsl!=null&&v<lsl);if(oos&&sd0>0&&Math.abs(v-median)>5*sd0)outliers.push({i,v});});
+  let use=all;
+  if(opt.excl&&outliers.length){const bad=new Set(outliers.map(o=>o.i));use=all.filter((_,i)=>!bad.has(i));}
+  const m=use.length;let sum=0,min=Infinity,max=-Infinity;for(const v of use){sum+=v;if(v<min)min=v;if(v>max)max=v;}
+  const mean=sum/m;let ss=0;for(const v of use)ss+=(v-mean)**2;const sd=m>1?Math.sqrt(ss/(m-1)):0;
+  let cp=null,cpk=null,expCenter=null;
+  if(sd>0){
+    if(lsl!=null&&usl!=null)cp=(usl-lsl)/(6*sd);
+    const a=usl!=null?(usl-mean)/(3*sd):Infinity,b=lsl!=null?(mean-lsl)/(3*sd):Infinity;
+    cpk=Math.min(a,b);if(!isFinite(cpk))cpk=null;
+    if(lsl!=null&&usl!=null){const c=(lsl+usl)/2;expCenter=(Phi((usl-c)/sd)-Phi((lsl-c)/sd))*100;}
+  }
+  const allMin=sorted[0],allMax=sorted[n-1];
+  return {n,all,pass,over,under,fail:over+under,rate:pass/n*100,mean,sd,min:opt.excl?min:allMin,max:opt.excl?max:allMax,allMin,allMax,median,
+    p005:q(.005),p995:q(.995),q1:q(.25),q3:q(.75),cp,cpk,expCenter,outliers,lsl,usl};
+}
+function rateClass(r,target){const t=target||95;if(r>=t)return 'good';if(r>=t-15)return 'warn';return 'bad';}
+function cpkClass(c){if(c==null)return '';if(c>=1.33)return 'good';if(c>=1)return 'warn';return 'bad';}
+
+/* =========================================================
+   XLSX / CSV 읽기 (외부 라이브러리 없이)
+   ========================================================= */
+async function inflateRaw(u8){
+  if(typeof DecompressionStream==='undefined')throw new Error('이 브라우저는 엑셀 압축 해제를 지원하지 않습니다. 최신 크롬/엣지를 쓰거나 복사·붙여넣기를 이용하세요.');
+  const ds=new DecompressionStream('deflate-raw');
+  const st=new Blob([u8]).stream().pipeThrough(ds);
+  return new Uint8Array(await new Response(st).arrayBuffer());
+}
+function unzip(buf){
+  const dv=new DataView(buf);let eocd=-1;
+  for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-65557);i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}}
+  if(eocd<0)throw new Error('엑셀(.xlsx) 파일 형식이 아닙니다.');
+  const cnt=dv.getUint16(eocd+10,true);let p=dv.getUint32(eocd+16,true);
+  const files={};const dec=new TextDecoder();
+  for(let k=0;k<cnt;k++){
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),nlen=dv.getUint16(p+28,true),elen=dv.getUint16(p+30,true),clen=dv.getUint16(p+32,true),lho=dv.getUint32(p+42,true);
+    const name=dec.decode(new Uint8Array(buf,p+46,nlen));files[name.toLowerCase()]={method,csize,lho,name};
+    p+=46+nlen+elen+clen;
+  }
+  return {
+    has:n=>!!files[n.toLowerCase()],
+    async text(n){const f=files[n.toLowerCase()];if(!f)return null;
+      const lnl=dv.getUint16(f.lho+26,true),lel=dv.getUint16(f.lho+28,true);const st=f.lho+30+lnl+lel;
+      const data=new Uint8Array(buf,st,f.csize);const out=f.method===0?data:await inflateRaw(data);
+      return new TextDecoder('utf-8').decode(out);}
+  };
+}
+function xmlEls(doc,tag){return Array.from(doc.getElementsByTagNameNS('*',tag));}
+async function readXlsx(buf){
+  const z=unzip(buf);const P=new DOMParser();
+  const wbx=await z.text('xl/workbook.xml');if(!wbx)throw new Error('엑셀 통합문서 정보를 찾지 못했습니다.');
+  const wb=P.parseFromString(wbx,'application/xml');
+  const rels={};const rx=await z.text('xl/_rels/workbook.xml.rels');
+  if(rx){for(const e of xmlEls(P.parseFromString(rx,'application/xml'),'Relationship'))rels[e.getAttribute('Id')]=e.getAttribute('Target');}
+  const ss=[];const sx=await z.text('xl/sharedStrings.xml');
+  if(sx){for(const si of xmlEls(P.parseFromString(sx,'application/xml'),'si')){let t='';for(const x of xmlEls(si,'t'))t+=x.textContent;ss.push(t);}}
+  const sheets=[];
+  for(const s of xmlEls(wb,'sheet')){
+    const rid=s.getAttribute('r:id')||s.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id');
+    let tg=rels[rid]||'';const path=tg.startsWith('/')?tg.slice(1):'xl/'+tg.replace(/^\.\//,'');
+    sheets.push({name:s.getAttribute('name'),path});
+  }
+  return {sheets,async grid(i){const x=await z.text(sheets[i].path);if(!x)return [];return sheetGrid(P.parseFromString(x,'application/xml'),ss);}};
+}
+function sheetGrid(doc,ss){
+  const grid=[];let rowIdx=-1;
+  for(const row of xmlEls(doc,'row')){
+    const ra=row.getAttribute('r');rowIdx=ra?+ra-1:rowIdx+1;let colI=-1;
+    for(const c of xmlEls(row,'c')){
+      const r=c.getAttribute('r');
+      if(r){const m=r.match(/^([A-Z]+)(\d+)$/);colI=colIdx(m[1]);}else colI++;
+      const t=c.getAttribute('t');const vEl=xmlEls(c,'v')[0];let val=null;
+      if(t==='s'){if(vEl)val=ss[+vEl.textContent];}
+      else if(t==='inlineStr'){val=xmlEls(c,'t').map(x=>x.textContent).join('');}
+      else if(t==='str'){if(vEl)val=vEl.textContent;}
+      else if(t==='b'){if(vEl)val=vEl.textContent==='1'?'TRUE':'FALSE';}
+      else if(t==='e'){val=null;}
+      else if(vEl&&vEl.textContent!==''){val=parseFloat(vEl.textContent);if(!isFinite(val))val=null;}
+      if(val===null||val==='')continue;
+      (grid[rowIdx]=grid[rowIdx]||[])[colI]=val;
+    }
+  }
+  for(let i=0;i<grid.length;i++)if(!grid[i])grid[i]=[];
+  return grid;
+}
+function textToGrid(text){
+  text=text.replace(/\r\n?/g,'\n').replace(/\n+$/,'');
+  const lines=text.split('\n');
+  const hasTab=text.indexOf('\t')>=0;
+  const isCsv=!hasTab&&lines.some(l=>/;|,(?=\S)/.test(l))&&lines.every(l=>!/\d,\d{3}(\D|$)/.test(l)||l.split(',').length>3);
+  return lines.map(l=>{
+    let cells;
+    if(hasTab)cells=l.split('\t');
+    else if(isCsv)cells=l.split(/[,;]/);
+    else cells=l.trim().split(/[\s,;]+/);
+    return cells.map(c=>{c=c.trim().replace(/^"|"$/g,'');if(c==='')return undefined;const n=numOf(c);return n!==null?n:c;});
+  });
+}
+async function readCsvFile(file){
+  const buf=await file.arrayBuffer();let t;
+  try{t=new TextDecoder('utf-8',{fatal:true}).decode(buf);}catch(e){t=new TextDecoder('euc-kr').decode(buf);}
+  return textToGrid(t.replace(/^﻿/,''));
+}
+
+/* =========================================================
+   자동 인식
+   ========================================================= */
+function detect(grid){
+  const R={title:null,titleCell:null,name:'',code:'',unit:'',prop:'',lsl:null,usl:null,range:null,how:''};
+  const maxR=grid.length;let maxC=0;for(const r of grid)if(r&&r.length>maxC)maxC=r.length;
+  // 1) 제목/규격 찾기
+  const specRe=/(-?\d+(?:\.\d+)?)\s*(?:[a-zA-Z㎜㎛μ%㎏㎎]*)\s*[~∼～〜]\s*(-?\d+(?:\.\d+)?)\s*([a-zA-Z㎜㎛μ%㎏㎎]*)/;
+  outer:for(let r=0;r<Math.min(maxR,60);r++){const row=grid[r]||[];for(let c=0;c<row.length;c++){
+    const v=row[c];if(typeof v!=='string')continue;const m=v.match(specRe);
+    if(m&&/[가-힣A-Za-z]/.test(v.replace(m[0],''))){
+      R.title=v;R.titleCell={r,c};
+      const a=parseFloat(m[1]),b=parseFloat(m[2]);R.lsl=Math.min(a,b);R.usl=Math.max(a,b);R.unit=m[3]||'';
+      const name=v.replace(/[(\[（].*?[)\]）]/g,'').replace(m[0],'').trim();R.name=name;
+      const code=name.match(/[A-Za-z0-9][A-Za-z0-9\-_.]{2,}/);R.code=code?code[0]:'';
+      const props=['중량','무게','두께','폭','길이','밀도','경도','저항','강도','치수','직경','높이','평량'];
+      R.prop=props.find(p=>v.indexOf(p)>=0)||'';
+      break outer;
+    }
+  }}
+  // 규격이 "상한/하한" 라벨로 따로 있을 때
+  if(R.lsl==null&&R.usl==null){
+    for(let r=0;r<Math.min(maxR,60);r++){const row=grid[r]||[];for(let c=0;c<row.length;c++){
+      const v=row[c];if(typeof v!=='string')continue;const nx=numOf(row[c+1])!=null?numOf(row[c+1]):numOf((grid[r+1]||[])[c]);
+      if(nx==null)continue;if(/하한|LSL|min/i.test(v))R.lsl=nx;else if(/상한|USL|max/i.test(v))R.usl=nx;
+    }}
+  }
+  // 2) 번호 머리행 (1,2,3,...)
+  let best=null;
+  for(let r=0;r<Math.min(maxR,200);r++){const row=grid[r]||[];
+    for(let c=0;c<row.length;c++){if(numOf(row[c])!==1)continue;let k=1;while(numOf(row[c+k])===k+1)k++;
+      if(k>=3&&(!best||k>best.k)){
+        // 아래 행에 숫자가 있어야 함
+        let ok=0;for(let rr=r+1;rr<Math.min(maxR,r+6);rr++)for(let cc=c;cc<c+k;cc++)if(numOf((grid[rr]||[])[cc])!=null)ok++;
+        if(ok>=k)best={r,c,k};
+      }
+      c+=k-1;
+    }
+  }
+  if(best){
+    let last=best.r+1;
+    for(let r=best.r+1;r<maxR;r++){const row=grid[r]||[];for(let c=best.c;c<best.c+best.k;c++)if(numOf(row[c])!=null){last=r;break;}}
+    R.range={r0:best.r+1,r1:last,c0:best.c,c1:best.c+best.k-1};R.how='번호 머리행(1~'+best.k+') 아래 영역';
+    return R;
+  }
+  // 3) 일반: 숫자 많은 열 덩어리 (순번 열 제외)
+  const cnt=new Array(maxC).fill(0);let r0=Infinity,r1=-1;
+  for(let r=0;r<maxR;r++){const row=grid[r]||[];for(let c=0;c<row.length;c++)if(numOf(row[c])!=null){cnt[c]++;}}
+  const mx=Math.max(0,...cnt);if(!mx)return R;
+  const isIndexCol=c=>{let prev=null,seq=0,tot=0;for(let r=0;r<maxR;r++){const v=numOf((grid[r]||[])[c]);if(v==null)continue;tot++;if(prev!=null&&v===prev+1)seq++;prev=v;}return tot>=5&&seq>=tot*0.9&&Number.isInteger(prev);};
+  const keep=cnt.map((n,c)=>n>=mx*0.3&&!isIndexCol(c));
+  // 가장 숫자가 많은 열을 중심으로 이어진 덩어리
+  let center=-1,cm=-1;keep.forEach((k,c)=>{if(k&&cnt[c]>cm){cm=cnt[c];center=c;}});
+  if(center<0)return R;
+  let c0=center,c1=center;while(c0-1>=0&&keep[c0-1])c0--;while(c1+1<maxC&&keep[c1+1])c1++;
+  for(let r=0;r<maxR;r++){const row=grid[r]||[];for(let c=c0;c<=c1;c++)if(numOf(row[c])!=null){if(r<r0)r0=r;if(r>r1)r1=r;break;}}
+  R.range={r0,r1,c0,c1};R.how='숫자가 모여 있는 영역';
+  return R;
+}
+function extract(grid,rg,order,dropZero){
+  const out=[];if(!rg)return out;
+  if(order==='col'){for(let c=rg.c0;c<=rg.c1;c++)for(let r=rg.r0;r<=rg.r1;r++){const v=numOf((grid[r]||[])[c]);if(v!=null&&!(dropZero&&v===0))out.push(v);}}
+  else{for(let r=rg.r0;r<=rg.r1;r++)for(let c=rg.c0;c<=rg.c1;c++){const v=numOf((grid[r]||[])[c]);if(v!=null&&!(dropZero&&v===0))out.push(v);}}
+  return out;
+}
+function dateFromName(n){
+  const m=String(n||'').match(/(20\d{2}|\d{2})[.\-_ ]?(\d{1,2})[.\-_ ]?(\d{1,2})(?!\d)/);
+  if(!m)return null;let y=+m[1];if(y<100)y+=2000;const mo=+m[2],d=+m[3];
+  if(mo<1||mo>12||d<1||d>31)return null;
+  return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+
+/* =========================================================
+   차트 (캔버스 직접 그리기)
+   ========================================================= */
+function setupCanvas(cv,w,h,scale){
+  scale=scale||Math.max(1,window.devicePixelRatio||1);
+  cv.width=Math.round(w*scale);cv.height=Math.round(h*scale);cv.style.width=w+'px';cv.style.height=h+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(scale,0,0,scale,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+  ctx.font='12px "Malgun Gothic","Apple SD Gothic Neo",sans-serif';ctx.textBaseline='middle';
+  cv._hits=[];cv._hover=null;
+  return ctx;
+}
+function niceStep(raw){const mag=Math.pow(10,Math.floor(Math.log10(raw)));const e=raw/mag;return (e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mag;}
+function niceTicks(min,max,count){
+  if(!(max>min)){min-=1;max+=1;}const step=niceStep((max-min)/(count||5));
+  const lo=Math.floor(min/step+1e-9)*step,hi=Math.ceil(max/step-1e-9)*step;const t=[];
+  for(let v=lo;v<=hi+step*1e-6;v+=step)t.push(+v.toFixed(10));return {lo,hi,step,ticks:t};
+}
+function tickFmt(v,step){const d=step>=1?0:Math.min(4,Math.ceil(-Math.log10(step)));return v.toFixed(d);}
+function yAxis(ctx,pad,W,H,yt,sy,label){
+  ctx.strokeStyle=C.grid;ctx.lineWidth=1;ctx.fillStyle=C.text;ctx.textAlign='right';
+  for(const t of yt.ticks){const y=Math.round(sy(t))+.5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillText(tickFmt(t,yt.step),pad.l-6,y);}
+  if(label){ctx.save();ctx.translate(13,pad.t+(H-pad.t-pad.b)/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText(label,0,0);ctx.restore();}
+}
+function vline(ctx,x,y0,y1,color,dash,w){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=w||1.5;if(dash)ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(Math.round(x)+.5,y0);ctx.lineTo(Math.round(x)+.5,y1);ctx.stroke();ctx.restore();}
+function hline(ctx,y,x0,x1,color,dash,w){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=w||1.5;if(dash)ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(x0,Math.round(y)+.5);ctx.lineTo(x1,Math.round(y)+.5);ctx.stroke();ctx.restore();}
+function roundTop(ctx,x,y,w,h,r){r=Math.min(r,w/2,Math.abs(h));if(h<=0)return;ctx.beginPath();ctx.moveTo(x,y+h);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h);ctx.closePath();ctx.fill();}
+function labelBox(ctx,text,x,y,color,align){
+  ctx.save();ctx.font='bold 11.5px "Malgun Gothic",sans-serif';const w=ctx.measureText(text).width+8;
+  let bx=align==='right'?x-w:align==='center'?x-w/2:x;ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillRect(bx,y-8,w,16);
+  ctx.fillStyle=color;ctx.textAlign='left';ctx.fillText(text,bx+4,y);ctx.restore();
+}
+function cvWidth(cv,o){return o.w||Math.max(300,(cv.parentElement?cv.parentElement.clientWidth:800));}
+
+// 1) 분포 히스토그램
+function drawHist(cv,st,o){
+  const W=cvWidth(cv,o),H=o.h||300,ctx=setupCanvas(cv,W,H,o.scale);const unit=o.unit||'';const d=o.dec??2;
+  const pad={l:52,r:18,t:34,b:38};
+  const lsl=st.lsl,usl=st.usl;
+  let lo=st.p005,hi=st.p995;if(lsl!=null)lo=Math.min(lo,lsl);if(usl!=null)hi=Math.max(hi,usl);
+  const span=Math.max(st.p995-st.p005,Math.abs(st.median)*0.001,1e-6);
+  let bw=niceStep(span/22);while((hi-lo)/bw>90)bw=niceStep(bw*1.6);
+  const start=Math.floor(lo/bw)*bw,nb=Math.max(1,Math.ceil((hi-start)/bw+1e-9)+((hi-start)%bw===0?1:0));
+  const end=start+nb*bw;const counts=new Array(nb).fill(0);let outL=0,outR=0;
+  for(const v of st.all){if(v<start){outL++;continue;}if(v>=end){outR++;continue;}counts[Math.min(nb-1,Math.floor((v-start)/bw))]++;}
+  const xt=niceTicks(start,end,Math.max(4,Math.floor((W-pad.l-pad.r)/80)));
+  const x0=Math.min(start,xt.lo),x1=Math.max(end,xt.hi);
+  const sx=v=>pad.l+(v-x0)/(x1-x0)*(W-pad.l-pad.r);
+  const yt=niceTicks(0,Math.max(...counts,1),5);const sy=v=>H-pad.b-(v/yt.hi)*(H-pad.t-pad.b);
+  yAxis(ctx,pad,W,H,yt,sy,'개수');
+  // 규격 구간 음영
+  if(lsl!=null||usl!=null){ctx.fillStyle=C.band;const a=sx(lsl!=null?lsl:x0),b=sx(usl!=null?usl:x1);ctx.fillRect(a,pad.t,b-a,H-pad.t-pad.b);}
+  for(let i=0;i<nb;i++){
+    const a=start+i*bw,b=a+bw,mid=(a+b)/2;const col=(usl!=null&&mid>usl)?C.over:(lsl!=null&&mid<lsl)?C.under:C.pass;
+    const px=sx(a)+1,pw=Math.max(1,sx(b)-sx(a)-2),y=sy(counts[i]);ctx.fillStyle=col;roundTop(ctx,px,y,pw,H-pad.b-y,3);
+    cv._hits.push({x0:sx(a),x1:sx(b),y0:pad.t,y1:H-pad.b,html:`${fmt(a,d)} ~ ${fmt(b,d)}${unit}<br><b>${fint(counts[i])}개</b> (${pct(counts[i]/st.n*100)})`});
+  }
+  // x축
+  ctx.fillStyle=C.text;ctx.textAlign='center';hline(ctx,H-pad.b,pad.l,W-pad.r,C.axis,null,1);
+  for(const t of xt.ticks){if(t<x0||t>x1)continue;ctx.fillText(tickFmt(t,xt.step),sx(t),H-pad.b+14);}
+  ctx.fillText(unit?`측정값 (${unit})`:'측정값',pad.l+(W-pad.l-pad.r)/2,H-8);
+  // 규격선·평균선
+  if(lsl!=null){vline(ctx,sx(lsl),pad.t-6,H-pad.b,C.spec,[5,4]);labelBox(ctx,'하한 '+lsl,sx(lsl),pad.t-14,C.spec,'center');}
+  if(usl!=null){vline(ctx,sx(usl),pad.t-6,H-pad.b,C.spec,[5,4]);labelBox(ctx,'상한 '+usl,sx(usl),pad.t-14,C.spec,'center');}
+  vline(ctx,sx(st.mean),pad.t,H-pad.b,C.mean,null,2);
+  labelBox(ctx,'평균 '+fmt(st.mean,d),sx(st.mean)+4,pad.t+10,C.mean,sx(st.mean)>W-140?'right':'left');
+  if(outL+outR){ctx.fillStyle=C.text;ctx.textAlign='right';ctx.font='11.5px "Malgun Gothic",sans-serif';ctx.fillText(`그래프 범위 밖 ${outL+outR}개`,W-pad.r,H-pad.b-10);}
+}
+
+// 2) 측정 순서 그래프
+function drawRun(cv,vals,o){
+  const W=cvWidth(cv,o),H=o.h||300,ctx=setupCanvas(cv,W,H,o.scale);const d=o.dec??2;const unit=o.unit||'';
+  const pad={l:52,r:18,t:22,b:38};const n=vals.length;if(!n)return;
+  const lsl=o.lsl,usl=o.usl;const st=o.stat;
+  let lo=st.p005,hi=st.p995;if(lsl!=null)lo=Math.min(lo,lsl);if(usl!=null)hi=Math.max(hi,usl);
+  const yt=niceTicks(lo-(hi-lo)*0.04,hi+(hi-lo)*0.04,5);
+  const sy=v=>H-pad.b-(v-yt.lo)/(yt.hi-yt.lo)*(H-pad.t-pad.b);
+  const sx=i=>pad.l+(n===1?0.5:i/(n-1))*(W-pad.l-pad.r);
+  yAxis(ctx,pad,W,H,yt,sy,unit);
+  if(lsl!=null||usl!=null){const a=sy(usl!=null?usl:yt.hi),b=sy(lsl!=null?lsl:yt.lo);ctx.fillStyle=C.band;ctx.fillRect(pad.l,a,W-pad.l-pad.r,b-a);}
+  // 로트 경계
+  (o.bounds||[]).forEach((b,k)=>{if(b.i>0)vline(ctx,sx(b.i-0.5),pad.t,H-pad.b,'#b9bec6',[2,3],1);
+    ctx.fillStyle=C.text;ctx.textAlign='left';ctx.font='11px "Malgun Gothic",sans-serif';
+    const nx=(o.bounds[k+1]?o.bounds[k+1].i:n);if(sx(nx)-sx(b.i)>60)ctx.fillText(b.label,sx(b.i)+4,pad.t+8);});
+  if(usl!=null){hline(ctx,sy(usl),pad.l,W-pad.r,C.spec,[5,4]);labelBox(ctx,'상한 '+usl,W-pad.r,sy(usl)-9,C.spec,'right');}
+  if(lsl!=null){hline(ctx,sy(lsl),pad.l,W-pad.r,C.spec,[5,4]);labelBox(ctx,'하한 '+lsl,W-pad.r,sy(lsl)+9,C.spec,'right');}
+  const r=n>3000?1.2:n>800?1.8:2.6;
+  for(let i=0;i<n;i++){const v=vals[i];let y=sy(v);let clamp=false;if(y<pad.t){y=pad.t;clamp=true;}if(y>H-pad.b){y=H-pad.b;clamp=true;}
+    ctx.fillStyle=(usl!=null&&v>usl)?C.over:(lsl!=null&&v<lsl)?C.under:C.pass;
+    if(clamp){ctx.beginPath();const x=sx(i);if(y<=pad.t){ctx.moveTo(x,y-1);ctx.lineTo(x-4,y+6);ctx.lineTo(x+4,y+6);}else{ctx.moveTo(x,y+1);ctx.lineTo(x-4,y-6);ctx.lineTo(x+4,y-6);}ctx.fill();}
+    else{ctx.beginPath();ctx.arc(sx(i),y,r,0,Math.PI*2);ctx.fill();}}
+  // 이동평균
+  const w=Math.max(5,Math.round(n/60));if(n>w*2){ctx.save();ctx.strokeStyle=C.mean;ctx.lineWidth=2;ctx.beginPath();let s=0;
+    for(let i=0;i<n;i++){s+=vals[i];if(i>=w)s-=vals[i-w];if(i>=w-1){const x=sx(i-(w-1)/2),y=Math.max(pad.t,Math.min(H-pad.b,sy(s/w)));if(i===w-1)ctx.moveTo(x,y);else ctx.lineTo(x,y);}}
+    ctx.stroke();ctx.restore();}
+  hline(ctx,H-pad.b,pad.l,W-pad.r,C.axis,null,1);
+  const xt=niceTicks(1,n,Math.max(4,Math.floor((W-pad.l-pad.r)/90)));ctx.fillStyle=C.text;ctx.textAlign='center';ctx.font='12px "Malgun Gothic",sans-serif';
+  for(const t of xt.ticks){if(t<1||t>n)continue;ctx.fillText(fint(t),sx(t-1),H-pad.b+14);}
+  ctx.fillText(`측정 순서 (검은 선: ${w}개 이동평균)`,pad.l+(W-pad.l-pad.r)/2,H-8);
+  cv._hover=(x,y)=>{if(x<pad.l||x>W-pad.r||y<pad.t-5||y>H-pad.b+5)return null;const i=Math.round((x-pad.l)/(W-pad.l-pad.r)*(n-1));if(i<0||i>=n)return null;
+    let lot='';if(o.bounds)for(const b of o.bounds)if(b.i<=i)lot=b.label;
+    return {html:`${fint(i+1)}번째${lot?' · '+esc(lot):''}<br><b>${fmt(vals[i],d)}${unit}</b>`,cx:sx(i)};};
+}
+
+// 3) 막대 (합격률 등)
+function drawBars(cv,cats,vals,o){
+  const W=cvWidth(cv,o),H=o.h||260,ctx=setupCanvas(cv,W,H,o.scale);
+  const pad={l:52,r:18,t:22,b:o.rot?64:40};const n=cats.length;if(!n)return;
+  const max=o.yMax!=null?o.yMax:Math.max(...vals,1);const yt=o.yMax!=null?{lo:0,hi:o.yMax,step:20,ticks:[0,20,40,60,80,100]}:niceTicks(0,max,5);
+  const sy=v=>H-pad.b-(v/yt.hi)*(H-pad.t-pad.b);yAxis(ctx,pad,W,H,yt,sy,o.yLabel||'');
+  const bandW=(W-pad.l-pad.r)/n;const bw=Math.min(54,bandW*0.66);
+  if(o.ref!=null){hline(ctx,sy(o.ref),pad.l,W-pad.r,C.spec,[5,4]);labelBox(ctx,o.refLabel||('기준 '+o.ref),W-pad.r,sy(o.ref)-9,C.spec,'right');}
+  for(let i=0;i<n;i++){const x=pad.l+bandW*i+(bandW-bw)/2,y=sy(vals[i]);ctx.fillStyle=o.color?o.color(vals[i],i):C.pass;roundTop(ctx,x,y,bw,H-pad.b-y,4);
+    if(n<=16){ctx.fillStyle='#191919';ctx.textAlign='center';ctx.font='bold 11.5px "Malgun Gothic",sans-serif';ctx.fillText(o.fmt?o.fmt(vals[i]):vals[i],x+bw/2,y-9);}
+    cv._hits.push({x0:pad.l+bandW*i,x1:pad.l+bandW*(i+1),y0:pad.t,y1:H-pad.b,html:`${esc(cats[i])}<br><b>${o.fmt?o.fmt(vals[i]):vals[i]}</b>${o.tipExtra?o.tipExtra(i):''}`});}
+  hline(ctx,H-pad.b,pad.l,W-pad.r,C.axis,null,1);
+  ctx.fillStyle=C.text;ctx.font='11.5px "Malgun Gothic",sans-serif';const every=Math.ceil(n/Math.max(1,Math.floor((W-pad.l-pad.r)/(o.rot?26:70))));
+  for(let i=0;i<n;i+=every){const x=pad.l+bandW*(i+.5);if(o.rot){ctx.save();ctx.translate(x,H-pad.b+8);ctx.rotate(-Math.PI/4);ctx.textAlign='right';ctx.fillText(cats[i],0,0);ctx.restore();}else{ctx.textAlign='center';ctx.fillText(cats[i],x,H-pad.b+14);}}
+}
+
+// 4) 누적 막대 (합격/상한초과/하한미달 수량)
+function drawStack(cv,cats,series,o){
+  const W=cvWidth(cv,o),H=o.h||260,ctx=setupCanvas(cv,W,H,o.scale);
+  const pad={l:56,r:18,t:16,b:o.rot?64:40};const n=cats.length;if(!n)return;
+  const tot=cats.map((_,i)=>series.reduce((s,se)=>s+se.values[i],0));const yt=niceTicks(0,Math.max(...tot,1),5);
+  const sy=v=>H-pad.b-(v/yt.hi)*(H-pad.t-pad.b);yAxis(ctx,pad,W,H,yt,sy,o.yLabel||'수량');
+  const bandW=(W-pad.l-pad.r)/n,bw=Math.min(54,bandW*0.66);
+  for(let i=0;i<n;i++){const x=pad.l+bandW*i+(bandW-bw)/2;let acc=0;
+    series.forEach((se,k)=>{const v=se.values[i];if(!v)return;const y0=sy(acc),y1=sy(acc+v);ctx.fillStyle=se.color;
+      const top=series.slice(k+1).every(s2=>!s2.values[i]);if(top)roundTop(ctx,x,y1,bw,y0-y1-(acc?2:0),4);else ctx.fillRect(x,y1+2,bw,Math.max(0,y0-y1-2-(acc?0:0)));acc+=v;});
+    cv._hits.push({x0:pad.l+bandW*i,x1:pad.l+bandW*(i+1),y0:pad.t,y1:H-pad.b,html:`${esc(cats[i])}<br>`+series.map(se=>`<span style="color:${se.color}">■</span> ${se.name} ${fint(se.values[i])}개`).join('<br>')+`<br>합계 ${fint(tot[i])}개`});}
+  hline(ctx,H-pad.b,pad.l,W-pad.r,C.axis,null,1);
+  ctx.fillStyle=C.text;ctx.font='11.5px "Malgun Gothic",sans-serif';const every=Math.ceil(n/Math.max(1,Math.floor((W-pad.l-pad.r)/(o.rot?26:70))));
+  for(let i=0;i<n;i+=every){const x=pad.l+bandW*(i+.5);if(o.rot){ctx.save();ctx.translate(x,H-pad.b+8);ctx.rotate(-Math.PI/4);ctx.textAlign='right';ctx.fillText(cats[i],0,0);ctx.restore();}else{ctx.textAlign='center';ctx.fillText(cats[i],x,H-pad.b+14);}}
+}
+
+// 5) 로트별 평균·범위
+function drawLotRange(cv,rows,o){
+  const W=cvWidth(cv,o),H=o.h||280,ctx=setupCanvas(cv,W,H,o.scale);const d=o.dec??2;const unit=o.unit||'';
+  const pad={l:52,r:18,t:22,b:o.rot?64:40};const n=rows.length;if(!n)return;
+  let lo=Math.min(...rows.map(r=>r.p05)),hi=Math.max(...rows.map(r=>r.p95));if(o.lsl!=null)lo=Math.min(lo,o.lsl);if(o.usl!=null)hi=Math.max(hi,o.usl);
+  const yt=niceTicks(lo-(hi-lo)*.05,hi+(hi-lo)*.05,5);const sy=v=>H-pad.b-(v-yt.lo)/(yt.hi-yt.lo)*(H-pad.t-pad.b);
+  yAxis(ctx,pad,W,H,yt,sy,unit);
+  if(o.lsl!=null||o.usl!=null){const a=sy(o.usl!=null?o.usl:yt.hi),b=sy(o.lsl!=null?o.lsl:yt.lo);ctx.fillStyle=C.band;ctx.fillRect(pad.l,a,W-pad.l-pad.r,b-a);}
+  if(o.usl!=null){hline(ctx,sy(o.usl),pad.l,W-pad.r,C.spec,[5,4]);labelBox(ctx,'상한 '+o.usl,W-pad.r,sy(o.usl)-9,C.spec,'right');}
+  if(o.lsl!=null){hline(ctx,sy(o.lsl),pad.l,W-pad.r,C.spec,[5,4]);labelBox(ctx,'하한 '+o.lsl,W-pad.r,sy(o.lsl)+9,C.spec,'right');}
+  const bandW=(W-pad.l-pad.r)/n;const cl=y=>Math.max(pad.t,Math.min(H-pad.b,y));
+  ctx.beginPath();ctx.strokeStyle='#9aa1aa';ctx.lineWidth=1.5;rows.forEach((r,i)=>{const x=pad.l+bandW*(i+.5);i?ctx.lineTo(x,cl(sy(r.mean))):ctx.moveTo(x,cl(sy(r.mean)));});ctx.stroke();
+  rows.forEach((r,i)=>{const x=pad.l+bandW*(i+.5);
+    ctx.strokeStyle=C.pass;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,cl(sy(r.p05)));ctx.lineTo(x,cl(sy(r.p95)));ctx.stroke();
+    const bw=Math.min(18,bandW*.4);ctx.fillStyle='rgba(37,125,224,.25)';ctx.fillRect(x-bw/2,cl(sy(r.q3)),bw,cl(sy(r.q1))-cl(sy(r.q3)));
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x,cl(sy(r.mean)),5,0,Math.PI*2);ctx.fill();ctx.fillStyle=C.mean;ctx.beginPath();ctx.arc(x,cl(sy(r.mean)),4,0,Math.PI*2);ctx.fill();
+    cv._hits.push({x0:pad.l+bandW*i,x1:pad.l+bandW*(i+1),y0:pad.t,y1:H-pad.b,html:`${esc(r.label)}<br>평균 <b>${fmt(r.mean,d)}</b>${unit}<br>중간 50%: ${fmt(r.q1,d)} ~ ${fmt(r.q3,d)}<br>5~95%: ${fmt(r.p05,d)} ~ ${fmt(r.p95,d)}`});});
+  hline(ctx,H-pad.b,pad.l,W-pad.r,C.axis,null,1);
+  ctx.fillStyle=C.text;ctx.font='11.5px "Malgun Gothic",sans-serif';const every=Math.ceil(n/Math.max(1,Math.floor((W-pad.l-pad.r)/(o.rot?26:70))));
+  for(let i=0;i<n;i+=every){const x=pad.l+bandW*(i+.5);if(o.rot){ctx.save();ctx.translate(x,H-pad.b+8);ctx.rotate(-Math.PI/4);ctx.textAlign='right';ctx.fillText(rows[i].label,0,0);ctx.restore();}else{ctx.textAlign='center';ctx.fillText(rows[i].label,x,H-pad.b+14);}}
+}
+
+// 툴팁
+const tip=$('#tip');
+function bindTip(cv){
+  if(cv._bound)return;cv._bound=true;
+  cv.addEventListener('mousemove',e=>{
+    const rc=cv.getBoundingClientRect();const x=e.clientX-rc.left,y=e.clientY-rc.top;let html=null;
+    if(cv._hover){const r=cv._hover(x,y);if(r)html=r.html;}
+    if(!html&&cv._hits)for(const h of cv._hits)if(x>=h.x0&&x<=h.x1&&y>=h.y0&&y<=h.y1){html=h.html;break;}
+    if(html){tip.innerHTML=html;tip.style.display='block';let tx=e.clientX+14,ty=e.clientY+14;const tw=tip.offsetWidth;if(tx+tw>innerWidth-8)tx=e.clientX-tw-14;tip.style.left=tx+'px';tip.style.top=ty+'px';}
+    else tip.style.display='none';
+  });
+  cv.addEventListener('mouseleave',()=>tip.style.display='none');
+}
+// 대시보드 차트 등록 → 리사이즈 시 다시 그림
+let CHARTS=[];
+function chartCard(id,title,legendHtml,h){
+  return `<div class="card"><h2>${title}<span class="tools"><button class="btn sm" data-png="${id}">PNG 저장</button><button class="btn sm" data-cpimg="${id}">이미지 복사</button></span></h2>${legendHtml||''}<div class="chartbox"><canvas id="${id}" style="height:${h||300}px"></canvas></div></div>`;
+}
+function renderCharts(){for(const c of CHARTS){const cv=document.getElementById(c.id);if(cv&&cv.offsetParent!==null){c.draw(cv);bindTip(cv);}}}
+let rsT;window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(renderCharts,150);});
+document.addEventListener('click',e=>{
+  const p=e.target.closest('[data-png]');if(p){const cv=document.getElementById(p.dataset.png);const c=CHARTS.find(x=>x.id===p.dataset.png);
+    const off=document.createElement('canvas');c.draw(off,{w:1200,scale:2});download((c.file||p.dataset.png)+'.png',dataURLtoBlob(off.toDataURL('image/png')));return;}
+  const q=e.target.closest('[data-cpimg]');if(q){const c=CHARTS.find(x=>x.id===q.dataset.cpimg);const off=document.createElement('canvas');c.draw(off,{w:1200,scale:2});copyCanvas(off);}
+});
+function dataURLtoBlob(u){const [h,b]=u.split(',');const bin=atob(b);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new Blob([a],{type:h.match(/:(.*?);/)[1]});}
+
+/* =========================================================
+   분석 문장 만들기
+   ========================================================= */
+function lotRows(lots,dec){
+  return lots.map(l=>{const s=calc([l]);const it=itemById(l.itemId);
+    return {lot:l,label:(l.date.slice(5).replace('-','/'))+(l.lotNo?' '+l.lotNo:''),n:s.n,pass:s.pass,over:s.over,under:s.under,rate:s.rate,mean:s.mean,sd:s.sd,min:s.allMin,max:s.allMax,
+      p05:quant(l.values,.05),p95:quant(l.values,.95),q1:s.q1,q3:s.q3,cpk:s.cpk,it};});
+}
+function quant(a,p){const s=Float64Array.from(a).sort();const i=(s.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);}
+function analyze(st,lots,it,excl){
+  const u=it&&it.unit||'';const d=it&&it.decimals!=null?it.decimals:2;const L=[];const lsl=st.lsl,usl=st.usl;
+  const target=it&&it.targetRate?+it.targetRate:null;
+  L.push(`총 ${fint(st.n)}개 검사, ${fint(st.pass)}개 합격 → 합격률 <b>${pct(st.rate)}</b>`+(target?` (목표 ${target}%${st.rate>=target?' 달성':' 미달'})`:''));
+  if(st.fail){
+    const parts=[];if(st.over)parts.push(`상한${usl!=null?'('+usl+u+')':''} 초과 ${fint(st.over)}개`);if(st.under)parts.push(`하한${lsl!=null?'('+lsl+u+')':''} 미달 ${fint(st.under)}개`);
+    L.push(`불합격 ${fint(st.fail)}개: ${parts.join(', ')}. `+(st.over>st.under*3?'대부분 상한 쪽 불량.':st.under>st.over*3?'대부분 하한 쪽 불량.':'양쪽 불량이 섞여 있음.'));
+  }else L.push('불합격 없음.');
+  if(usl!=null&&st.mean>usl)L.push(`평균 ${fmt(st.mean,d)}${u}, 상한보다 ${fmt(st.mean-usl,d)}${u} 높음. 산포보다 <b>중심값이 규격 밖으로 벗어난 것</b>이 불량의 주원인.`);
+  else if(lsl!=null&&st.mean<lsl)L.push(`평균 ${fmt(st.mean,d)}${u}, 하한보다 ${fmt(lsl-st.mean,d)}${u} 낮음. 산포보다 <b>중심값이 규격 밖으로 벗어난 것</b>이 불량의 주원인.`);
+  else if(lsl!=null&&usl!=null){const c=(lsl+usl)/2,diff=st.mean-c;L.push(`평균 ${fmt(st.mean,d)}${u}, 규격 중앙(${fmt(c,d)}${u}) 대비 ${diff>=0?'+':''}${fmt(diff,d)}${u}`+(Math.abs(diff)>(usl-lsl)*0.15?(diff>0?' → 상한 쪽으로 치우침.':' → 하한 쪽으로 치우침.'):' → 중앙 부근.'));}
+  else L.push(`평균 ${fmt(st.mean,d)}${u}.`);
+  L.push(`표준편차 ${fmt(st.sd,d+1)}${u}, 최소 ${fmt(st.allMin,d)} / 최대 ${fmt(st.allMax,d)}${u}`+(st.cpk!=null?`, 공정능력 Cpk ${st.cpk.toFixed(2)}`+(st.cpk>=1.33?' (양호)':st.cpk>=1?' (관리 필요)':st.cpk>=0?' (능력 부족, 1.33 이상 필요)':' (평균이 규격 밖, 1.33 이상 필요)'):'')+(excl&&st.outliers.length?' — 극단값 제외 기준':'')+'.');
+  if(st.expCenter!=null&&st.rate<95){
+    const ec=st.expCenter;const msg=ec>=99.5?'중심만 맞춰도 대부분 합격 가능.':ec>=95?'중심 조정이 가장 효과가 크고, 안정적으로 가려면 산포도 줄여야 함.':ec>=st.rate+10?'중심 조정 효과는 있으나 산포를 함께 줄여야 함.':'중심 조정만으로는 개선 폭이 작음. 산포(편차) 자체를 줄여야 함.';
+    L.push(`지금 산포 그대로 평균만 규격 중앙(${fmt((lsl+usl)/2,d)}${u})으로 옮기면 예상 합격률 약 ${pct(ec,ec>=99?1:0)} (정규분포 추정). ${msg}`);
+    if(st.cp!=null&&st.cp<1)L.push(`규격 폭(${fmt(usl-lsl,d)}${u}) 대비 산포가 커서 Cp ${st.cp.toFixed(2)}. 산포를 지금의 ${Math.round(Math.min(1,st.cp/1.33)*100)}% 수준으로 줄여야 Cp 1.33 확보.`);
+  }
+  // 측정 순서상 값이 튄 구간 (이동평균이 평소 수준에서 크게 벗어난 곳)
+  if(st.n>=100){
+    const rsd=(st.q3-st.q1)/1.349||st.sd;const eps=[];
+    for(const l of lots){const v=l.values;const n=v.length;if(n<60)continue;const w=Math.max(10,Math.round(n/100));
+      const ma=new Array(n).fill(null);let s=0;for(let i=0;i<n;i++){s+=v[i];if(i>=w)s-=v[i-w];if(i>=w-1)ma[i-Math.floor((w-1)/2)]=s/w;}
+      const flag=ma.map(m=>m!=null&&Math.abs(m-st.median)>2*rsd);
+      let i=0;while(i<n){if(!flag[i]){i++;continue;}let j=i;while(j+1<n&&(flag[j+1]||(j+w<n&&flag.slice(j+1,j+w).some(Boolean))))j++;
+        const a=Math.max(0,i-Math.floor(w/2)),b=Math.min(n-1,j+Math.floor(w/2));const part=v.slice(a,b+1);const m=part.reduce((x,y)=>x+y,0)/part.length;
+        eps.push({lot:l,a:a+1,b:b+1,m,dev:m-st.median,len:part.length});i=j+1;}}
+    if(eps.length){
+      const tot=eps.reduce((x,e)=>x+e.len,0);const top=[...eps].sort((x,y)=>Math.abs(y.dev)*y.len-Math.abs(x.dev)*x.len).slice(0,3).sort((x,y)=>x.a-y.a);
+      const lab=e=>(lots.length>1?e.lot.date.slice(5)+(e.lot.lotNo?' '+esc(e.lot.lotNo):'')+' ':'')+`${fint(e.a)}~${fint(e.b)}번째(평균 ${fmt(e.m,d)}${u})`;
+      L.push(`측정 순서상 값이 평소보다 ${eps.every(e=>e.dev>0)?'크게 높아진':eps.every(e=>e.dev<0)?'크게 낮아진':'크게 벗어난'} 구간 ${eps.length}곳, 약 ${fint(tot)}개 (${pct(tot/st.n*100)}). 주요 구간: ${top.map(lab).join(', ')}. 해당 시점의 원료·설비 조건 변화 확인 필요.`);
+    }else L.push('측정 순서상 값이 한꺼번에 튄 구간은 없음. 전체적으로 고르게 분포.');
+  }
+  if(st.outliers.length){const vs=st.outliers.slice(0,5).map(o=>fmt(o.v,d)).join(', ');L.push(`극단값 ${st.outliers.length}개 (${vs}${st.outliers.length>5?' …':''}${u}). 측정 또는 기록 오류 여부 확인 필요.`);}
+  // 로트 추이
+  if(lots.length>=2){
+    const rs=lotRows(lots);const first=rs[0],last=rs[rs.length-1];
+    const bestR=rs.reduce((a,b)=>b.rate>a.rate?b:a),worstR=rs.reduce((a,b)=>b.rate<a.rate?b:a);
+    L.push(`로트 ${rs.length}개 비교: 첫 로트 ${pct(first.rate)} → 마지막 로트 ${pct(last.rate)} (${last.rate>=first.rate?'+':''}${(last.rate-first.rate).toFixed(1)}%p). 최고 ${esc(bestR.label)} ${pct(bestR.rate)}, 최저 ${esc(worstR.label)} ${pct(worstR.rate)}.`);
+  }
+  let verdict,vc;
+  const t=target||95;
+  if(st.rate>=t&&(st.cpk==null||st.cpk>=1.33)){verdict=`판정: 양호 — 합격률 ${pct(st.rate)}${st.cpk!=null?', Cpk '+st.cpk.toFixed(2):''}`;vc='good';}
+  else if(st.rate>=t-15){verdict=`판정: 관리 필요 — 합격률 ${pct(st.rate)}${st.cpk!=null?', Cpk '+st.cpk.toFixed(2):''}`;vc='warn';}
+  else{verdict=`판정: 개선 필요 — 합격률 ${pct(st.rate)}`+(usl!=null&&st.mean>usl?', 평균이 상한 초과':lsl!=null&&st.mean<lsl?', 평균이 하한 미달':'');vc='bad';}
+  return {lines:L,verdict,vc};
+}
+
+/* =========================================================
+   탭 전환
+   ========================================================= */
+function showTab(t){
+  $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  $$('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));
+  if(t==='dash')renderDash();if(t==='data')renderData();if(t==='items')renderItems();if(t==='report')initReport();if(t==='input'){fillItemSel();if($('#manualWrap').style.display!=='none')mInit();}
+  window.scrollTo(0,0);
+}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)showTab(b.dataset.t);});
+function refreshHeader(){
+  const n=DB.lots.reduce((s,l)=>s+l.values.length,0);
+  $('#hdrInfo').textContent=`품목 ${DB.items.length}개 · 로트 ${DB.lots.length}개 · 측정값 ${fint(n)}개`;
+}
+
+/* =========================================================
+   대시보드
+   ========================================================= */
+function fillFilter(){
+  const sel=$('#fItem');const cur=sel.value;
+  sel.innerHTML=`<option value="__all">전체 품목 요약</option>`+DB.items.map(i=>`<option value="${i.id}">${esc(itemLabel(i))}</option>`).join('');
+  if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur;
+  else if(DB.items.length===1)sel.value=DB.items[0].id;
+  else{const lastLot=[...DB.lots].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))[0];if(lastLot)sel.value=lastLot.itemId;}
+}
+['#fItem','#fFrom','#fTo','#fExcl'].forEach(s=>$(s).addEventListener('change',renderDash));
+$$('[data-q]').forEach(b=>b.addEventListener('click',()=>{const q=b.dataset.q;const t=today();
+  if(q==='all'){$('#fFrom').value='';$('#fTo').value='';}
+  else if(q==='month'){$('#fFrom').value=t.slice(0,8)+'01';$('#fTo').value=t;}
+  else{$('#fFrom').value=addDays(t,-(+q)+1);$('#fTo').value=t;}
+  renderDash();}));
+let runLotSel='__all';
+function renderDash(){
+  fillFilter();refreshHeader();backupNotice();
+  const body=$('#dashBody');CHARTS=[];
+  if(!DB.lots.length){body.innerHTML=`<div class="card empty"><b style="font-size:17px">아직 등록된 검사 데이터가 없습니다.</b><br><br>[데이터 입력] 탭에서 엑셀 파일을 넣거나 붙여넣기로 시작하세요.<br><br><button class="btn primary" onclick="showTab('input')">데이터 입력으로 가기</button></div>`;return;}
+  const itemId=$('#fItem').value,from=$('#fFrom').value,to=$('#fTo').value,excl=$('#fExcl').checked;
+  if(itemId==='__all')return renderAll(body,from,to);
+  const it=itemById(itemId);const lots=lotsOf(itemId,from,to);
+  if(!lots.length){body.innerHTML=`<div class="card empty">선택한 기간에 ${esc(itemLabel(it))} 데이터가 없습니다.</div>`;return;}
+  const u=it.unit||'',d=it.decimals!=null?it.decimals:2;
+  const st=calc(lots,{excl,lsl:lots[lots.length-1].lsl,usl:lots[lots.length-1].usl});
+  const A=analyze(st,lots,it,excl);
+  const specs=new Set(lots.map(l=>specText(l.lsl,l.usl,'')));
+  const kp=(k,v,dd,cls)=>`<div class="kpi ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${dd||''}</div></div>`;
+  let html=`<div class="kpis">
+    ${kp('검사 수량',fint(st.n),`로트 ${lots.length}개 · ${lots[0].date}${lots.length>1?' ~ '+lots[lots.length-1].date:''}`)}
+    ${kp('합격',fint(st.pass),'규격 '+specText(st.lsl,st.usl,u))}
+    ${kp('불합격',fint(st.fail),`상한 초과 ${fint(st.over)} · 하한 미달 ${fint(st.under)}`,st.fail?'bad':'good')}
+    ${kp('합격률',pct(st.rate),it.targetRate?'목표 '+it.targetRate+'%':'',rateClass(st.rate,it.targetRate))}
+    ${kp('평균',fmt(st.mean,d)+'<span style="font-size:14px"> '+u+'</span>',`중앙값 ${fmt(st.median,d)}`,(st.usl!=null&&st.mean>st.usl)||(st.lsl!=null&&st.mean<st.lsl)?'bad':'')}
+    ${kp('표준편차',fmt(st.sd,d+1),`범위 ${fmt(st.allMin,d)} ~ ${fmt(st.allMax,d)}`)}
+    ${kp('Cpk',st.cpk!=null?st.cpk.toFixed(2):'-',st.cp!=null?'Cp '+st.cp.toFixed(2):'',cpkClass(st.cpk))}
+    ${kp('극단값',fint(st.outliers.length),st.outliers.length?'측정 오류 의심':'없음',st.outliers.length?'warn':'')}
+  </div>`;
+  if(specs.size>1)html+=`<div class="notice warn small">기간 안에 규격이 다른 로트가 섞여 있습니다 (${[...specs].join(' / ')}). 합격·불합격은 각 로트 규격으로 판정했고, 그래프의 규격선은 마지막 로트 기준입니다.</div>`;
+  html+=`<div class="card"><h2>분석 요약 <span class="tools"><button class="btn sm" id="cpAna">복사</button><button class="btn sm" onclick="goReport()">이 조건으로 보고서 만들기</button></span></h2>
+    <div class="verdict ${A.vc}" style="font-size:15px;margin:0 0 8px">${A.verdict}</div><ul id="anaList" style="margin:0;padding-left:20px">${A.lines.map(x=>`<li style="margin:4px 0">${x}</li>`).join('')}</ul></div>`;
+  const lg=`<div class="legend"><span><i style="background:${C.pass}"></i>합격 구간</span><span><i style="background:${C.over}"></i>상한 초과</span><span><i style="background:${C.under}"></i>하한 미달</span><span><i class="dash"></i>규격선</span><span><i class="line" style="background:${C.mean}"></i>평균</span></div>`;
+  html+=`<div class="grid2">${chartCard('chHist','측정값 분포',lg,300)}`;
+  const runOpts=`<select id="runLot" style="font-size:12.5px;padding:3px 6px"><option value="__all">기간 내 전체 로트</option>${lots.map(l=>`<option value="${l.id}">${l.date} ${esc(l.lotNo||'')} (${fint(l.values.length)}개)</option>`).join('')}</select>`;
+  html+=`<div class="card"><h2>측정 순서별 값 <span class="tools">${runOpts}<button class="btn sm" data-png="chRun">PNG 저장</button><button class="btn sm" data-cpimg="chRun">이미지 복사</button></span></h2><div class="legend"><span><i style="background:${C.pass}"></i>합격</span><span><i style="background:${C.over}"></i>상한 초과</span><span><i style="background:${C.under}"></i>하한 미달</span><span><i class="line" style="background:${C.mean}"></i>이동평균</span></div><div class="chartbox"><canvas id="chRun" style="height:300px"></canvas></div></div></div>`;
+  const rows=lotRows(lots,d);const rot=rows.length>8;
+  html+=`<div class="grid2">${chartCard('chRate','로트별 합격률','',270)}${chartCard('chStack','로트별 판정 수량',`<div class="legend"><span><i style="background:${C.pass}"></i>합격</span><span><i style="background:${C.over}"></i>상한 초과</span><span><i style="background:${C.under}"></i>하한 미달</span></div>`,270)}</div>`;
+  html+=chartCard('chRange','로트별 평균과 산포',`<div class="legend"><span><i style="background:${C.mean};border-radius:50%"></i>평균</span><span><i style="background:rgba(37,125,224,.35)"></i>가운데 50%</span><span><i class="line" style="background:${C.pass}"></i>5~95% 범위</span><span><i class="dash"></i>규격선</span></div>`,290);
+  html+=`<div class="card"><h2>로트별 상세 <span class="tools"><button class="btn sm" id="cpLotTbl">표 복사</button><button class="btn sm" id="dlLotTbl">CSV 저장</button></span></h2><div class="tblwrap">${lotTableHtml(rows,d,u)}</div></div>`;
+  body.innerHTML=html;
+  if(![...$('#runLot').options].some(o=>o.value===runLotSel))runLotSel='__all';$('#runLot').value=runLotSel;
+  $('#runLot').addEventListener('change',e=>{runLotSel=e.target.value;renderCharts();});
+  $('#cpAna').onclick=()=>copyText(A.verdict+'\n'+A.lines.map(x=>'- '+x.replace(/<[^>]+>/g,'')).join('\n'));
+  $('#cpLotTbl').onclick=()=>copyText(lotTSV(rows,d));
+  $('#dlLotTbl').onclick=()=>download(`${it.code||it.name}_로트별상세.csv`,'﻿'+lotTSV(rows,d).replace(/\t/g,','),'text/csv;charset=utf-8');
+  const fileBase=(it.code||it.name).replace(/[\\/:*?"<>|]/g,'_');
+  CHARTS=[
+    {id:'chHist',file:fileBase+'_분포',draw:(cv,o={})=>drawHist(cv,st,{...o,unit:u,dec:d,h:o.w?420:300})},
+    {id:'chRun',file:fileBase+'_측정순서',draw:(cv,o={})=>{let ls=lots;if(runLotSel!=='__all')ls=lots.filter(l=>l.id===runLotSel);const v=[].concat(...ls.map(l=>l.values));const s2=calc(ls,{lsl:st.lsl,usl:st.usl});let acc=0;const bounds=ls.length>1?ls.map(l=>{const b={i:acc,label:l.date.slice(5)+(l.lotNo?' '+l.lotNo:'')};acc+=l.values.length;return b;}):[];drawRun(cv,v,{...o,lsl:st.lsl,usl:st.usl,stat:s2,dec:d,unit:u,bounds,h:o.w?420:300});}},
+    {id:'chRate',file:fileBase+'_로트별합격률',draw:(cv,o={})=>drawBars(cv,rows.map(r=>r.label),rows.map(r=>r.rate),{...o,yMax:100,yLabel:'합격률(%)',fmt:v=>v.toFixed(1)+'%',rot,ref:it.targetRate?+it.targetRate:null,refLabel:'목표 '+it.targetRate+'%',color:v=>v>=(it.targetRate||95)?C.pass:v>=(it.targetRate||95)-15?C.under:C.over,tipExtra:i=>`<br>${fint(rows[i].pass)} / ${fint(rows[i].n)}개`,h:o.w?380:270})},
+    {id:'chStack',file:fileBase+'_로트별판정수량',draw:(cv,o={})=>drawStack(cv,rows.map(r=>r.label),[{name:'합격',color:C.pass,values:rows.map(r=>r.pass)},{name:'상한 초과',color:C.over,values:rows.map(r=>r.over)},{name:'하한 미달',color:C.under,values:rows.map(r=>r.under)}],{...o,rot,h:o.w?380:270})},
+    {id:'chRange',file:fileBase+'_로트별평균산포',draw:(cv,o={})=>drawLotRange(cv,rows,{...o,lsl:st.lsl,usl:st.usl,dec:d,unit:u,rot,h:o.w?400:290})},
+  ];
+  renderCharts();
+}
+function lotTableHtml(rows,d,u){
+  return `<table class="tbl"><thead><tr><th>검사일</th><th>로트</th><th>검사자</th><th>규격</th><th class="num">수량</th><th class="num">합격</th><th class="num">상한 초과</th><th class="num">하한 미달</th><th class="num">합격률</th><th class="num">평균</th><th class="num">표준편차</th><th class="num">최소</th><th class="num">최대</th><th class="num">Cpk</th></tr></thead><tbody>`+
+  rows.map(r=>`<tr><td>${r.lot.date}</td><td>${esc(r.lot.lotNo||'')}</td><td>${esc(r.lot.inspector||'')}</td><td>${specText(r.lot.lsl,r.lot.usl,u)}</td><td class="num">${fint(r.n)}</td><td class="num">${fint(r.pass)}</td><td class="num">${fint(r.over)}</td><td class="num">${fint(r.under)}</td><td class="num"><span class="badge ${rateClass(r.rate,r.it&&r.it.targetRate)}">${pct(r.rate)}</span></td><td class="num">${fmt(r.mean,d)}</td><td class="num">${fmt(r.sd,d+1)}</td><td class="num">${fmt(r.min,d)}</td><td class="num">${fmt(r.max,d)}</td><td class="num">${r.cpk!=null?r.cpk.toFixed(2):'-'}</td></tr>`).join('')+`</tbody></table>`;
+}
+function lotTSV(rows,d){
+  const h=['검사일','로트','검사자','규격하한','규격상한','수량','합격','상한초과','하한미달','합격률(%)','평균','표준편차','최소','최대','Cpk'];
+  return [h.join('\t')].concat(rows.map(r=>[r.lot.date,r.lot.lotNo||'',r.lot.inspector||'',r.lot.lsl??'',r.lot.usl??'',r.n,r.pass,r.over,r.under,r.rate.toFixed(2),r.mean.toFixed(d+1),r.sd.toFixed(d+2),r.min,r.max,r.cpk!=null?r.cpk.toFixed(3):''].join('\t'))).join('\n');
+}
+function renderAll(body,from,to){
+  const lots=lotsOf('__all',from,to);if(!lots.length){body.innerHTML='<div class="card empty">선택한 기간에 데이터가 없습니다.</div>';return;}
+  const per=DB.items.map(it=>{const ls=lots.filter(l=>l.itemId===it.id);if(!ls.length)return null;const s=calc(ls);return {it,ls,s};}).filter(Boolean);
+  let n=0,pass=0,over=0,under=0;per.forEach(p=>{n+=p.s.n;pass+=p.s.pass;over+=p.s.over;under+=p.s.under;});
+  const kp=(k,v,dd,cls)=>`<div class="kpi ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${dd||''}</div></div>`;
+  // 일자별
+  const byDate={};lots.forEach(l=>{const j=judgeCounts(l.values,l.lsl,l.usl);const o=byDate[l.date]=byDate[l.date]||{pass:0,over:0,under:0};o.pass+=j.pass;o.over+=j.over;o.under+=j.under;});
+  const dates=Object.keys(byDate).sort();
+  let html=`<div class="kpis">${kp('검사 품목',per.length+'개')}${kp('검사 로트',lots.length+'개',`${lots[0].date} ~ ${lots[lots.length-1].date}`)}${kp('검사 수량',fint(n))}${kp('합격',fint(pass))}${kp('불합격',fint(over+under),`상한 초과 ${fint(over)} · 하한 미달 ${fint(under)}`,over+under?'bad':'good')}${kp('전체 합격률',pct(pass/n*100),'',rateClass(pass/n*100))}</div>`;
+  html+=`<div class="grid2">${chartCard('chItem','품목별 합격률','',280)}${chartCard('chDate','일자별 판정 수량 (전 품목)',`<div class="legend"><span><i style="background:${C.pass}"></i>합격</span><span><i style="background:${C.over}"></i>상한 초과</span><span><i style="background:${C.under}"></i>하한 미달</span></div>`,280)}</div>`;
+  html+=`<div class="card"><h2>품목별 요약 <span class="tools"><button class="btn sm" id="cpItemTbl">표 복사</button></span></h2><div class="tblwrap"><table class="tbl"><thead><tr><th>품목</th><th>최근 규격</th><th class="num">로트</th><th class="num">수량</th><th class="num">합격</th><th class="num">불합격</th><th class="num">합격률</th><th class="num">평균</th><th class="num">Cpk</th><th>최근 검사일</th><th></th></tr></thead><tbody>`+
+    per.map(p=>{const d=p.it.decimals!=null?p.it.decimals:2;return `<tr><td><b>${esc(itemLabel(p.it))}</b></td><td>${specText(p.s.lsl,p.s.usl,p.it.unit)}</td><td class="num">${p.ls.length}</td><td class="num">${fint(p.s.n)}</td><td class="num">${fint(p.s.pass)}</td><td class="num">${fint(p.s.fail)}</td><td class="num"><span class="badge ${rateClass(p.s.rate,p.it.targetRate)}">${pct(p.s.rate)}</span></td><td class="num">${fmt(p.s.mean,d)} ${esc(p.it.unit||'')}</td><td class="num">${p.s.cpk!=null?p.s.cpk.toFixed(2):'-'}</td><td>${p.ls[p.ls.length-1].date}</td><td><button class="btn sm" data-goitem="${p.it.id}">상세 보기</button></td></tr>`;}).join('')+`</tbody></table></div></div>`;
+  body.innerHTML=html;
+  body.querySelectorAll('[data-goitem]').forEach(b=>b.onclick=()=>{$('#fItem').value=b.dataset.goitem;renderDash();});
+  $('#cpItemTbl').onclick=()=>copyText(['품목\t규격하한\t규격상한\t로트\t수량\t합격\t불합격\t합격률(%)\t평균\tCpk'].concat(per.map(p=>[itemLabel(p.it),p.s.lsl??'',p.s.usl??'',p.ls.length,p.s.n,p.s.pass,p.s.fail,p.s.rate.toFixed(2),p.s.mean.toFixed(3),p.s.cpk!=null?p.s.cpk.toFixed(3):''].join('\t'))).join('\n'));
+  const dc=dates.map(x=>x.slice(5).replace('-','/'));const rot=dates.length>10;
+  CHARTS=[
+    {id:'chItem',file:'품목별합격률',draw:(cv,o={})=>drawBars(cv,per.map(p=>p.it.code||p.it.name),per.map(p=>p.s.rate),{...o,yMax:100,yLabel:'합격률(%)',fmt:v=>v.toFixed(1)+'%',rot:per.length>8,color:v=>v>=95?C.pass:v>=80?C.under:C.over,tipExtra:i=>`<br>${fint(per[i].s.pass)} / ${fint(per[i].s.n)}개`,h:o.w?380:280})},
+    {id:'chDate',file:'일자별판정수량',draw:(cv,o={})=>drawStack(cv,dc,[{name:'합격',color:C.pass,values:dates.map(x=>byDate[x].pass)},{name:'상한 초과',color:C.over,values:dates.map(x=>byDate[x].over)},{name:'하한 미달',color:C.under,values:dates.map(x=>byDate[x].under)}],{...o,rot,h:o.w?380:280})},
+  ];
+  renderCharts();
+}
+function backupNotice(){
+  const el=$('#backupNotice');if(!DB.lots.length||SERVER){el.innerHTML='';return;}
+  const lb=DB.meta.lastBackup;const days=lb?Math.floor((Date.now()-lb)/864e5):null;
+  const changed=DB.meta.lastChange&&(!lb||DB.meta.lastChange>lb);
+  if(changed&&(days==null||days>=7))el.innerHTML=`<div class="notice warn no-print">${lb?`마지막 백업 후 ${days}일 지났습니다.`:'아직 백업 파일을 저장한 적이 없습니다.'} 데이터가 브라우저 안에만 있으니 <a href="#" onclick="doBackup();return false;"><b>지금 백업 파일 저장</b></a>을 권장합니다.</div>`;
+  else el.innerHTML='';
+}
+function goReport(){$('#rpItem').dataset.pre=$('#fItem').value;$('#rpFrom').dataset.pre=$('#fFrom').value;$('#rpTo').dataset.pre=$('#fTo').value;$('#rpExcl').checked=$('#fExcl').checked;showTab('report');}
+
+/* =========================================================
+   데이터 입력
+   ========================================================= */
+let IN={grid:null,det:null,source:'',fileName:'',book:null};
+$$('#inTabs button').forEach(b=>b.addEventListener('click',()=>{$$('#inTabs button').forEach(x=>x.classList.toggle('on',x===b));const m=b.dataset.m;
+  $('#in-file').style.display=m==='file'?'':'none';$('#in-paste').style.display=m==='paste'?'':'none';$('#in-manual').style.display=m==='manual'?'':'none';
+  $('#manualWrap').style.display=m==='manual'?'':'none';const sp=m!=='manual'&&!!IN.grid;$('#parseCard').style.display=sp?'':'none';$('#regCard').style.display=sp?'':'none';
+  if(m==='manual')mInit();}));
+const drop=$('#drop');
+drop.addEventListener('click',()=>$('#fileIn').click());
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])openFile(e.dataTransfer.files[0]);});
+$('#fileIn').addEventListener('change',e=>{if(e.target.files[0])openFile(e.target.files[0]);e.target.value='';});
+// 입력 탭 어디에 끌어다 놓아도 받기
+$('#p-input').addEventListener('dragover',e=>e.preventDefault());
+$('#p-input').addEventListener('drop',e=>{if(e.target.closest('#drop'))return;e.preventDefault();if(e.dataTransfer.files[0]){$$('#inTabs button')[0].click();openFile(e.dataTransfer.files[0]);}});
+async function openFile(f){
+  try{
+    IN.fileName=f.name;IN.source='파일: '+f.name;
+    const dt0=dateFromName(f.name);if(dt0)$('#rDate').value=dt0;
+    if(/\.(csv|txt)$/i.test(f.name)){IN.book=null;$('#sheetRow').style.display='none';setGrid(await readCsvFile(f));}
+    else if(/\.xls$/i.test(f.name)){alert('구형 .xls 파일은 직접 읽을 수 없습니다.\n엑셀에서 [다른 이름으로 저장] → Excel 통합 문서(.xlsx)로 저장한 뒤 넣거나, 데이터를 복사·붙여넣기 하세요.');return;}
+    else{
+      const book=await readXlsx(await f.arrayBuffer());IN.book=book;
+      $('#sheetSel').innerHTML=book.sheets.map((s,i)=>`<option value="${i}">${esc(s.name)}</option>`).join('');
+      $('#sheetRow').style.display='';$('#fileName').textContent=f.name;
+      // 숫자가 가장 많은 시트를 기본 선택
+      let bi=0,bc=-1;const grids=[];
+      for(let i=0;i<book.sheets.length;i++){const g=await book.grid(i);grids.push(g);let c=0;for(const r of g)for(const v of r||[])if(numOf(v)!=null)c++;if(c>bc){bc=c;bi=i;}}
+      IN.grids=grids;$('#sheetSel').value=bi;setGrid(grids[bi]);
+    }
+  }catch(err){console.error(err);alert('파일을 읽지 못했습니다.\n'+err.message+'\n\n엑셀에서 데이터를 복사해 [복사·붙여넣기]로 넣어 보세요.');}
+}
+$('#sheetSel').addEventListener('change',e=>{setGrid(IN.grids[+e.target.value]);});
+let pasteT;
+$('#pasteBox').addEventListener('input',()=>{clearTimeout(pasteT);pasteT=setTimeout(()=>{const t=$('#pasteBox').value;if(!t.trim()){$('#parseCard').style.display='none';$('#regCard').style.display='none';return;}IN.source='붙여넣기';IN.fileName='';setGrid(textToGrid(t));},250);});
+$('#pasteClear').onclick=()=>{$('#pasteBox').value='';$('#parseCard').style.display='none';$('#regCard').style.display='none';};
+function setGrid(g){
+  IN.grid=g;IN.det=detect(g);
+  $('#rangeIn').value=IN.det.range?rangeStr(IN.det.range):'';$('#orderIn').value='row';
+  $('#parseCard').style.display='';$('#regCard').style.display='';
+  prefillReg();updateParse();
+}
+$('#rangeIn').addEventListener('input',()=>{const r=parseRange($('#rangeIn').value);if(r){IN.det.range=r;IN.det.how='직접 지정한 범위';updateParse();}});
+$('#orderIn').addEventListener('change',updateParse);$('#zeroIn').addEventListener('change',updateParse);
+$('#reDetect').onclick=()=>{if(IN.grid)setGrid(IN.grid);};
+function curSpec(){const a=$('#rLsl').value.trim(),b=$('#rUsl').value.trim();return {lsl:a===''?null:+a,usl:b===''?null:+b};}
+$('#rLsl').addEventListener('input',updateParse);$('#rUsl').addEventListener('input',updateParse);
+function currentValues(){return extract(IN.grid,IN.det.range,$('#orderIn').value,$('#zeroIn').checked);}
+function updateParse(){
+  if(!IN.grid)return;const det=IN.det;const vals=currentValues();const sp=curSpec();
+  let h='';
+  h+=`<div class="line"><b>인식 방식</b>: ${esc(det.how||'인식 실패 — 범위를 직접 입력하세요')}</div>`;
+  if(det.title)h+=`<div class="line"><b>제목</b>: ${esc(det.title)}</div>`;
+  h+=`<div class="line"><b>규격</b>: ${det.lsl!=null||det.usl!=null?specText(det.lsl,det.usl,det.unit)+' (제목에서 읽음)':'<span class="muted">찾지 못함 — 아래 등록 정보에 직접 입력</span>'}</div>`;
+  h+=`<div class="line"><b>범위</b>: ${det.range?rangeStr(det.range):'-'} → 측정값 <b style="font-size:17px">${fint(vals.length)}</b>개</div>`;
+  if(vals.length){
+    const j=judgeCounts(vals,sp.lsl,sp.usl);const m=vals.reduce((a,b)=>a+b,0)/vals.length;const dd=decOf(vals);
+    h+=`<div class="line">평균 ${fmt(m,dd)} · 최소 ${fmt(Math.min(...vals),dd)} · 최대 ${fmt(Math.max(...vals),dd)}</div>`;
+    if(sp.lsl!=null||sp.usl!=null)h+=`<div class="line">합격 <b>${fint(j.pass)}</b> · 상한 초과 ${fint(j.over)} · 하한 미달 ${fint(j.under)} → 합격률 <b>${pct(j.pass/vals.length*100)}</b></div>`;
+    h+=`<div class="line small muted">처음 값: ${vals.slice(0,8).map(v=>fmt(v,dd)).join(', ')} …</div>`;
+  }
+  $('#detectBox').innerHTML=h;
+  // 미리보기
+  const g=IN.grid,rg=det.range;let maxC=0;g.forEach(r=>{if(r&&r.length>maxC)maxC=r.length;});maxC=Math.min(maxC,26);
+  let r0=0;if(rg&&rg.r0>12)r0=Math.max(0,(det.titleCell?Math.min(det.titleCell.r,rg.r0-3):rg.r0-3));
+  const rEnd=Math.min(g.length,r0+60);
+  let t=`<table><tr><th></th>${Array.from({length:maxC},(_,c)=>`<th>${colName(c)}</th>`).join('')}</tr>`;
+  for(let r=r0;r<rEnd;r++){t+=`<tr><td class="rh">${r+1}</td>`;const row=g[r]||[];
+    for(let c=0;c<maxC;c++){const v=row[c];const inR=rg&&r>=rg.r0&&r<=rg.r1&&c>=rg.c0&&c<=rg.c1&&numOf(v)!=null;
+      let cls=inR?'in':'';if(inR){const x=numOf(v);if((sp.usl!=null&&x>sp.usl)||(sp.lsl!=null&&x<sp.lsl))cls+=' f';}
+      if(det.titleCell&&det.titleCell.r===r&&det.titleCell.c===c)cls='title';
+      t+=`<td class="${cls}">${v==null?'':esc(typeof v==='number'?+v.toFixed(6):v)}</td>`;}
+    t+='</tr>';}
+  t+='</table>';if(g.length>rEnd)t+=`<div class="small muted" style="padding:6px">… ${fint(g.length-rEnd)}행 더 있음 (미리보기는 일부만 표시)</div>`;
+  $('#previewBox').innerHTML=t;
+}
+$('#copyVals').onclick=()=>{const v=currentValues();copyText(v.join('\n'));};
+function fillItemSel(){
+  const sel=$('#rItem');const cur=sel.value;
+  sel.innerHTML=DB.items.map(i=>`<option value="${i.id}">${esc(itemLabel(i))}</option>`).join('')+`<option value="__new">+ 새 품목 만들기</option>`;
+  if(cur&&[...sel.options].some(o=>o.value===cur))sel.value=cur;else sel.value=DB.items.length?DB.items[0].id:'__new';
+  onItemSel(false);
+}
+function onItemSel(fromUser){
+  const v=$('#rItem').value;$('#newItemBox').style.display=v==='__new'?'':'none';
+  if(v!=='__new'){const it=itemById(v);if(it&&fromUser!==false){$('#rLsl').value=it.lsl??'';$('#rUsl').value=it.usl??'';}}
+  autoLot();updateParse();
+}
+$('#rItem').addEventListener('change',()=>onItemSel(true));
+function prefillReg(){
+  const det=IN.det;if(!$('#rDate').value)$('#rDate').value=today();
+  // 기존 품목과 매칭
+  let match=null;
+  if(det.code||det.name){const key=(det.code||det.name).toLowerCase();match=DB.items.find(i=>(i.code&&i.code.toLowerCase()===key)||i.name.toLowerCase()===det.name.toLowerCase()||(i.code&&det.name.toLowerCase().indexOf(i.code.toLowerCase())>=0));}
+  fillItemSel();
+  if(match){$('#rItem').value=match.id;$('#newItemBox').style.display='none';
+    $('#rLsl').value=det.lsl!=null?det.lsl:(match.lsl??'');$('#rUsl').value=det.usl!=null?det.usl:(match.usl??'');}
+  else if(det.name||det.code||!DB.items.length){$('#rItem').value='__new';$('#newItemBox').style.display='';
+    $('#nName').value=det.name||'';$('#nCode').value=det.code||'';$('#nUnit').value=det.unit||'';$('#nProp').value=det.prop||'중량';
+    $('#rLsl').value=det.lsl??'';$('#rUsl').value=det.usl??'';}
+  else{const it=itemById($('#rItem').value);if(it){$('#rLsl').value=det.lsl!=null?det.lsl:(it.lsl??'');$('#rUsl').value=det.usl!=null?det.usl:(it.usl??'');}}
+  autoLot();
+}
+function autoLot(){
+  const v=$('#rItem').value;const dt=$('#rDate').value||today();let code='';
+  if(v==='__new')code=$('#nCode').value||$('#nName').value.split(' ')[0]||'LOT';else{const it=itemById(v);code=it?(it.code||it.name.split(' ')[0]):'LOT';}
+  const same=DB.lots.filter(l=>l.itemId===v&&l.date===dt).length;
+  const lot=`${code}-${dt.slice(2).replace(/-/g,'')}-${String(same+1).padStart(2,'0')}`;
+  if(!$('#rLot').dataset.touched)$('#rLot').value=lot;
+}
+$('#rLot').addEventListener('input',()=>$('#rLot').dataset.touched='1');
+$('#rDate').addEventListener('change',autoLot);$('#nCode').addEventListener('input',autoLot);
+$('#regBtn').onclick=()=>{
+  const vals=currentValues();if(!vals.length){alert('인식된 측정값이 없습니다. 범위를 확인하세요.');return;}
+  const sp=curSpec();if(sp.lsl!=null&&sp.usl!=null&&sp.lsl>sp.usl){alert('규격 하한이 상한보다 큽니다.');return;}
+  const date=$('#rDate').value;if(!date){alert('검사일을 입력하세요.');return;}
+  let itemId=$('#rItem').value;
+  if(itemId==='__new'){
+    const name=$('#nName').value.trim();if(!name){alert('새 품목명을 입력하세요.');return;}
+    const it={id:uid(),name,code:$('#nCode').value.trim(),prop:$('#nProp').value.trim(),unit:$('#nUnit').value.trim(),lsl:sp.lsl,usl:sp.usl,decimals:decOf(vals),targetRate:null,memo:'',createdAt:Date.now()};
+    DB.items.push(it);itemId=it.id;
+  }
+  const sum=vals.reduce((a,b)=>a+b,0);
+  const dup=DB.lots.find(l=>l.itemId===itemId&&l.values.length===vals.length&&Math.abs(l.values.reduce((a,b)=>a+b,0)-sum)<1e-6);
+  if(dup&&!confirm(`같은 품목에 측정값 개수와 합계가 똑같은 로트가 이미 있습니다.\n(${dup.date} ${dup.lotNo||''})\n\n그래도 등록할까요?`))return;
+  const lot={id:uid(),itemId,date,lotNo:$('#rLot').value.trim(),inspector:$('#rInsp').value.trim(),line:$('#rLine').value.trim(),memo:$('#rMemo').value.trim(),
+    lsl:sp.lsl,usl:sp.usl,values:vals,source:IN.source,createdAt:Date.now()};
+  DB.lots.push(lot);DB.meta.lastChange=Date.now();
+  if(!save()){DB.lots.pop();return;}
+  const j=judgeCounts(vals,sp.lsl,sp.usl);
+  $('#regMsg').innerHTML=`<b style="color:var(--good)">등록 완료</b> — ${fint(vals.length)}개, 합격률 ${pct(j.pass/vals.length*100)} &nbsp;<button class="btn sm primary" id="goDash">대시보드에서 보기</button>`;
+  $('#goDash').onclick=()=>{$('#fItem').value=itemId;fillFilter();$('#fItem').value=itemId;runLotSel=lot.id;showTab('dash');};
+  $('#rLot').dataset.touched='';$('#rMemo').value='';fillItemSel();$('#rItem').value=itemId;onItemSel(false);
+  toast('등록했습니다');refreshHeader();
+};
+
+/* =========================================================
+   직접 입력 (표)
+   ========================================================= */
+let MD=null;
+function mDefault(){return {item:'',title:'',date:today(),insp:'',line:'',lsl:'',usl:'',nName:'',nCode:'',nProp:'중량',nUnit:'',
+  lots:[{name:'',qty:100,cols:10,rows:10,memo:'',vals:[]}],built:true};}
+function mNorm(l){if(!(l.cols>0))l.cols=10;if(l.qty==null)l.qty=(l.rows||0)*l.cols;l.qty=Math.max(0,Math.min(20000,parseInt(l.qty)||0));l.rows=Math.max(1,Math.ceil(l.qty/l.cols));}
+function mItemCode(){
+  if(MD.item&&MD.item!=='__new'){const it=itemById(MD.item);return it?(it.code||it.name.split(' ')[0]):'LOT';}
+  return MD.nCode||(MD.nName||'').split(' ')[0]||'LOT';
+}
+function mLotName(i){const l=MD.lots[i];if(l.name&&l.name.trim())return l.name.trim();return `${mItemCode()}-${(MD.date||today()).slice(2).replace(/-/g,'')}-${String(i+1).padStart(2,'0')}`;}
+let mSaveT;
+function mSave(){DB.meta.draft=MD;clearTimeout(mSaveT);mSaveT=setTimeout(()=>{save();$('#mSaved').textContent='임시 저장됨 '+new Date().toLocaleTimeString('ko-KR');},1200);}
+function mSpec(){const a=String(MD.lsl).trim(),b=String(MD.usl).trim();return {lsl:a===''?null:+a,usl:b===''?null:+b};}
+function mInit(){
+  if(!MD){MD=DB.meta.draft||mDefault();if(!MD.lots||!MD.lots.length)MD.lots=mDefault().lots;MD.built=true;}
+  MD.lots.forEach(mNorm);
+  const sel=$('#mItem');
+  sel.innerHTML=DB.items.map(i=>`<option value="${i.id}">${esc(itemLabel(i))}</option>`).join('')+`<option value="__new">+ 새 품목 만들기</option>`;
+  if(!MD.item||(MD.item!=='__new'&&!itemById(MD.item))){MD.item=DB.items.length?DB.items[0].id:'__new';const it=itemById(MD.item);if(it){MD.lsl=it.lsl??'';MD.usl=it.usl??'';}}
+  sel.value=MD.item;
+  const map={mTitle:'title',mDate:'date',mInsp:'insp',mLine:'line',mLsl:'lsl',mUsl:'usl',mnName:'nName',mnCode:'nCode',mnProp:'nProp',mnUnit:'nUnit'};
+  for(const id in map)$('#'+id).value=MD[map[id]]??'';
+  $('#mNewBox').style.display=MD.item==='__new'?'':'none';
+  if(!MD.title)$('#mTitle').placeholder=mDefTitle();
+  mRenderCfg();
+  if(MD.built)mBuildGrids(true);else $('#mGridCard').style.display='none';
+}
+function mDefTitle(){let it=MD.item!=='__new'?itemById(MD.item):null;const code=it?(it.code||it.name):(MD.nCode||MD.nName||'');const prop=it?(it.prop||''):(MD.nProp||'');return `${code} ${prop} 전수검사`.replace(/\s+/g,' ').trim();}
+(function(){
+  const map={mTitle:'title',mDate:'date',mInsp:'insp',mLine:'line',mLsl:'lsl',mUsl:'usl',mnName:'nName',mnCode:'nCode',mnProp:'nProp',mnUnit:'nUnit'};
+  for(const id in map)$('#'+id).addEventListener('input',()=>{MD[map[id]]=$('#'+id).value;mSave();
+    if(id==='mLsl'||id==='mUsl'){mRecolorAll();}
+    if(['mDate','mnCode','mnName'].includes(id))mRenderCfg();
+    if(['mnCode','mnName','mnProp'].includes(id))$('#mTitle').placeholder=mDefTitle();});
+  $('#mItem').addEventListener('change',()=>{MD.item=$('#mItem').value;$('#mNewBox').style.display=MD.item==='__new'?'':'none';
+    const it=itemById(MD.item);if(it){MD.lsl=it.lsl??'';MD.usl=it.usl??'';$('#mLsl').value=MD.lsl;$('#mUsl').value=MD.usl;}
+    $('#mTitle').placeholder=mDefTitle();mRenderCfg();mRecolorAll();mSave();});
+})();
+function mRenderCfg(){
+  const tb=$('#mCfg tbody');let tot=0;
+  tb.innerHTML=MD.lots.map((l,i)=>{tot+=l.qty;return `<tr>
+    <td>로트<br>${i+1}</td>
+    <td><input type="text" data-k="name" data-i="${i}" value="${esc(l.name||'')}" placeholder="${esc(mLotName(i))}"></td>
+    <td><input type="number" min="1" max="20000" data-k="qty" data-i="${i}" value="${l.qty}" style="font-weight:700;font-size:15px"></td>
+    <td><input type="number" min="1" max="50" data-k="cols" data-i="${i}" value="${l.cols}"></td>
+    <td class="tot" id="mTot${i}">${mShape(l)}</td>
+    <td><input type="text" data-k="memo" data-i="${i}" value="${esc(l.memo||'')}" placeholder="예) 2호기, 속도 12m/min"></td>
+    <td><button class="btn sm danger" data-mdel="${i}" ${MD.lots.length<2?'disabled':''}>삭제</button></td></tr>`;}).join('')+
+    `<tr style="background:#f7f8fa"><td colspan="2" style="text-align:right;font-weight:700">합계 (${MD.lots.length}개 로트)</td><td class="tot" id="mTotAll">${fint(tot)}개</td><td colspan="4"></td></tr>`;
+}
+function mShape(l){return l.qty?`${fint(l.rows)}줄 × ${l.cols}칸`:'-';}
+const mAutoT={};
+$('#mCfg').addEventListener('input',e=>{
+  const t=e.target;if(!t.dataset.k)return;const i=+t.dataset.i,k=t.dataset.k;const L=MD.lots[i];
+  if(k==='qty'||k==='cols'){
+    const v=parseInt(t.value)||0;if(k==='cols'&&v<1)return;L[k]=k==='cols'?Math.min(50,v):v;mNorm(L);
+    $('#mTot'+i).textContent=mShape(L);$('#mTotAll').textContent=fint(MD.lots.reduce((s,l)=>s+l.qty,0))+'개';
+    clearTimeout(mAutoT[i]);mAutoT[i]=setTimeout(()=>mReshape(i,k==='cols'),500);mSave();return;
+  }
+  L[k]=t.value;
+  if(k==='name'&&MD.built){const h=$(`.mlot[data-l="${i}"] .mlot-head b`);if(h)h.textContent=mLotName(i);}
+  mSave();
+});
+$('#mCfg').addEventListener('click',e=>{const b=e.target.closest('[data-mdel]');if(!b)return;const i=+b.dataset.mdel;
+  const has=(MD.lots[i].vals||[]).some(r=>r&&r.some(v=>v!==''&&v!=null));
+  if(has&&!confirm(`${mLotName(i)}에 입력한 값이 있습니다. 삭제할까요?`))return;
+  MD.lots.splice(i,1);mRenderCfg();if(MD.built)mBuildGrids(true);mSave();});
+$('#mAddLot').onclick=()=>{const last=MD.lots[MD.lots.length-1]||{qty:100,cols:10};const nl={name:'',qty:last.qty,cols:last.cols,memo:'',vals:[]};mNorm(nl);MD.lots.push(nl);mRenderCfg();if(MD.built)mBuildGrids(true);mSave();};
+$('#mBuild').onclick=()=>{
+  for(const l of MD.lots){mNorm(l);if(!(l.qty>0)){alert('검사 수량은 1 이상이어야 합니다.');return;}}
+  mBuildGrids(false);$('#mGridCard').scrollIntoView({behavior:'smooth'});
+  setTimeout(()=>mFocus(0,0,0),300);
+};
+function mFlat(l){const out=[];(l.vals||[]).forEach(row=>(row||[]).forEach(v=>out.push(v)));return out;}
+function mReshape(i,colsChanged){
+  const L=MD.lots[i];
+  if(colsChanged&&L._cols&&L._cols!==L.cols){ // 칸 수가 바뀌면 입력 순서를 유지한 채 다시 배치
+    const flat=[];(L.vals||[]).forEach(row=>(row||[]).forEach(v=>flat.push(v)));
+    L.vals=[];for(let r=0;r<L.rows;r++){L.vals[r]=[];for(let c=0;c<L.cols;c++)L.vals[r][c]=flat[r*L.cols+c]??'';}
+  }
+  let lost=0;(L.vals||[]).forEach((row,r)=>(row||[]).forEach((v,c)=>{if(r*L.cols+c>=L.qty&&v!==''&&v!=null)lost++;}));
+  if(lost)toast(`검사 수량 밖으로 나간 입력값 ${lost}개는 표에서 숨겨졌습니다 (수량을 늘리면 다시 보입니다)`);
+  L._cols=L.cols;mRebuildLot(i);if(!$(`.mlot[data-l="${i}"]`))mBuildGrids();mSave();
+}
+function mFitVals(l){ // 모자란 칸만 채우고, 수량을 줄여 숨겨진 값은 지우지 않음
+  if(!Array.isArray(l.vals))l.vals=[];const R=Math.max(l.rows,l.vals.length);
+  for(let r=0;r<R;r++){if(!Array.isArray(l.vals[r]))l.vals[r]=[];for(let c=0;c<l.cols;c++)if(l.vals[r][c]==null)l.vals[r][c]='';}}
+function mCls(v){if(v===''||v==null)return '';const n=numOf(v);if(n==null)return 'err';const sp=mSpec();if(sp.usl!=null&&n>sp.usl)return 'over';if(sp.lsl!=null&&n<sp.lsl)return 'under';return '';}
+function mLotHtml(l,i){
+  let h=`<div class="mlot" data-l="${i}"><div class="mlot-head"><b>${esc(mLotName(i))}</b><span class="st" id="mSt${i}"></span><span class="tools"><button class="btn sm" data-maddrow="${i}">+ 한 줄 더</button><button class="btn sm" data-mclr="${i}">이 로트 비우기</button></span></div>`;
+  h+=`<div class="mgrid-wrap"><table class="mgrid"><thead><tr><th class="corner">줄＼칸</th>${Array.from({length:l.cols},(_,c)=>`<th>${c+1}</th>`).join('')}</tr></thead><tbody>`;
+  for(let r=0;r<l.rows;r++){h+=`<tr><td class="rh" title="${fint(r*l.cols+1)}~${fint(Math.min(l.qty,(r+1)*l.cols))}번째">${r+1}</td>`;for(let c=0;c<l.cols;c++){const v=l.vals[r][c];const idx=r*l.cols+c;
+    h+=idx<l.qty?`<td><input data-l="${i}" data-r="${r}" data-c="${c}" value="${esc(v)}" class="${mCls(v)}" inputmode="decimal" autocomplete="off" title="${fint(idx+1)}번째"></td>`:`<td><input class="off" disabled tabindex="-1"></td>`;}h+='</tr>';}
+  return h+'</tbody></table></div></div>';
+}
+function mBuildGrids(){
+  MD.built=true;MD.lots.forEach(l=>{mNorm(l);mFitVals(l);l._cols=l.cols;});
+  $('#mGrids').innerHTML=MD.lots.map(mLotHtml).join('');$('#mGridCard').style.display='';
+  MD.lots.forEach((_,i)=>mStats(i));mSave();
+}
+function mRebuildLot(i){const el=$(`.mlot[data-l="${i}"]`);if(!el)return;mFitVals(MD.lots[i]);el.outerHTML=mLotHtml(MD.lots[i],i);mStats(i);}
+function mRecolorAll(){$$('#mGrids input').forEach(inp=>{inp.className=mCls(inp.value);});MD.lots.forEach((_,i)=>mStats(i));}
+function mStats(i){
+  const l=MD.lots[i];const el=$('#mSt'+i);if(!el)return;const sp=mSpec();
+  let filled=0,bad=0,nums=[];
+  l.vals.forEach((row,r)=>row.forEach((v,c)=>{if(r*l.cols+c>=l.qty||v===''||v==null)return;filled++;const n=numOf(v);if(n==null)bad++;else nums.push(n);}));
+  const tot=l.qty;let t=`입력 <b>${fint(filled)}</b> / ${fint(tot)}개`+(filled===tot&&tot?' <b style="color:var(--good)">완료</b>':'');
+  if(nums.length){const j=judgeCounts(nums,sp.lsl,sp.usl);const m=nums.reduce((a,b)=>a+b,0)/nums.length;
+    t+=` · 합격 ${fint(j.pass)} · <span style="color:var(--bad)">상한 초과 ${fint(j.over)}</span> · <span style="color:var(--warn)">하한 미달 ${fint(j.under)}</span> · 합격률 <b>${pct(j.pass/nums.length*100)}</b> · 평균 ${fmt(m,decOf(nums))}`;}
+  if(bad)t+=` · <b style="color:var(--bad)">숫자 아님 ${bad}칸</b>`;
+  el.innerHTML=t;
+}
+const mStatT={};
+function mFocus(l,r,c){const inp=$(`#mGrids input[data-l="${l}"][data-r="${r}"][data-c="${c}"]`);if(inp){inp.focus();inp.select();return true;}return false;}
+$('#mGrids').addEventListener('input',e=>{
+  const t=e.target;if(t.tagName!=='INPUT'||t.dataset.l==null)return;const l=+t.dataset.l,r=+t.dataset.r,c=+t.dataset.c;
+  MD.lots[l].vals[r][c]=t.value.trim();t.className=mCls(t.value.trim());
+  clearTimeout(mStatT[l]);mStatT[l]=setTimeout(()=>mStats(l),150);mSave();
+});
+$('#mGrids').addEventListener('focusin',e=>{if(e.target.tagName==='INPUT'&&e.target.dataset.l!=null)e.target.select();});
+$('#mGrids').addEventListener('keydown',e=>{
+  const t=e.target;if(t.tagName!=='INPUT'||t.dataset.l==null)return;
+  let l=+t.dataset.l,r=+t.dataset.r,c=+t.dataset.c;const L=MD.lots[l];
+  const next=()=>{c++;if(c>=L.cols){c=0;r++;}if(r*L.cols+c>=L.qty||r>=L.rows){if(l+1<MD.lots.length){l++;r=0;c=0;}else return false;}return true;};
+  const prev=()=>{c--;if(c<0){c=L.cols-1;r--;}if(r<0){if(l>0){l--;r=MD.lots[l].rows-1;c=MD.lots[l].cols-1;}else return false;}return true;};
+  if(e.key==='Enter'){e.preventDefault();if(e.shiftKey?prev():next())mFocus(l,r,c);else if(!e.shiftKey){t.select();toast('마지막 칸입니다. 다 입력했으면 [입력한 로트 등록]을 누르세요');}return;}
+  if(e.key==='ArrowDown'){e.preventDefault();if(!mFocus(l,r+1,c)&&l+1<MD.lots.length)mFocus(l+1,0,c);return;}
+  if(e.key==='ArrowUp'){e.preventDefault();mFocus(l,Math.max(0,r-1),c);return;}
+  if(e.key==='ArrowRight'&&t.selectionEnd===t.value.length){e.preventDefault();if(next())mFocus(l,r,c);return;}
+  if(e.key==='ArrowLeft'&&t.selectionStart===0){e.preventDefault();if(prev())mFocus(l,r,c);return;}
+});
+$('#mGrids').addEventListener('paste',e=>{
+  const t=e.target;if(t.tagName!=='INPUT'||t.dataset.l==null)return;
+  let text=(e.clipboardData||window.clipboardData).getData('text');if(!text)return;
+  text=text.replace(/\r\n?/g,'\n').replace(/\n+$/,'');
+  if(text.indexOf('\t')<0&&text.indexOf('\n')<0)return; // 한 칸짜리는 기본 동작
+  e.preventDefault();
+  const l=+t.dataset.l,r0=+t.dataset.r,c0=+t.dataset.c;const L=MD.lots[l];
+  const rows=text.split('\n').map(x=>x.split('\t'));let cut=0,cnt=0;
+  let maxIdx=-1;
+  rows.forEach((row,i)=>{const r=r0+i;if(r>=L.rows){L.rows=r+1;}mFitVals(L);
+    row.forEach((v,j)=>{const c=c0+j;if(c>=L.cols){if(v.trim()!=='')cut++;return;}L.vals[r][c]=v.trim().replace(/,/g,'');cnt++;if(v.trim()!=='')maxIdx=Math.max(maxIdx,r*L.cols+c);});});
+  if(maxIdx>=L.qty){toast(`붙여넣은 값이 검사 수량보다 많아 수량을 ${fint(maxIdx+1)}개로 늘렸습니다`);L.qty=maxIdx+1;}
+  mNorm(L);
+  mRebuildLot(l);mRenderCfg();mSave();mFocus(l,Math.min(L.rows-1,r0+rows.length-1),c0);
+  toast(`${fint(cnt)}칸 붙여넣었습니다`+(cut?` (칸 수를 넘는 ${cut}개는 제외)`:''));
+});
+$('#mGrids').addEventListener('click',e=>{
+  const a=e.target.closest('[data-maddrow]');if(a){const i=+a.dataset.maddrow;const L=MD.lots[i];L.qty=L.rows*L.cols+L.cols;mNorm(L);mRebuildLot(i);mRenderCfg();mSave();mFocus(i,L.rows-1,0);return;}
+  const b=e.target.closest('[data-mclr]');if(b){const i=+b.dataset.mclr;if(!confirm(`${mLotName(i)}의 입력값을 모두 지울까요?`))return;MD.lots[i].vals=[];mRebuildLot(i);mSave();}
+});
+$('#mClear').onclick=()=>{if(!confirm('모든 로트의 입력값을 지울까요? (입력 구성은 그대로 둡니다)'))return;MD.lots.forEach(l=>l.vals=[]);mBuildGrids();};
+$('#mReg').onclick=()=>{
+  const sp=mSpec();if(sp.lsl!=null&&sp.usl!=null&&sp.lsl>sp.usl){alert('규격 하한이 상한보다 큽니다.');return;}
+  if(!MD.date){alert('검사일을 입력하세요.');return;}
+  if(MD.item==='__new'&&!String(MD.nName||'').trim()){alert('새 품목명을 입력하세요.');return;}
+  let bad=0;const pack=[];const partial=[];
+  MD.lots.forEach((l,i)=>{const nums=[];let filled=0;l.vals.forEach((row,r)=>row.forEach((v,c)=>{if(r*l.cols+c>=l.qty||v===''||v==null)return;filled++;const n=numOf(v);if(n==null)bad++;else nums.push(n);}));
+    if(nums.length){pack.push({i,nums});if(filled<l.qty)partial.push(`${mLotName(i)}: ${fint(l.qty)}개 중 ${fint(filled)}개 입력`);}});
+  if(bad){alert(`숫자가 아닌 칸이 ${bad}개 있습니다 (빨간 점선 칸). 고친 뒤 등록하세요.`);return;}
+  if(!pack.length){alert('입력된 측정값이 없습니다.');return;}
+  if(partial.length&&!confirm('빈칸이 있는 로트가 있습니다. 입력된 값만 등록할까요?\n\n'+partial.join('\n')))return;
+  let itemId=MD.item;
+  if(itemId==='__new'){const all=[].concat(...pack.map(p=>p.nums));const it={id:uid(),name:MD.nName.trim(),code:(MD.nCode||'').trim(),prop:(MD.nProp||'').trim(),unit:(MD.nUnit||'').trim(),lsl:sp.lsl,usl:sp.usl,decimals:decOf(all),targetRate:null,memo:'',createdAt:Date.now()};DB.items.push(it);itemId=it.id;}
+  const title=(MD.title||'').trim()||mDefTitle();let total=0,pass=0;
+  pack.forEach(p=>{const l=MD.lots[p.i];DB.lots.push({id:uid(),itemId,date:MD.date,lotNo:mLotName(p.i),inspector:(MD.insp||'').trim(),line:(MD.line||'').trim(),memo:(l.memo||'').trim(),title,
+    lsl:sp.lsl,usl:sp.usl,values:p.nums,source:'직접 입력',createdAt:Date.now()+p.i});total+=p.nums.length;pass+=judgeCounts(p.nums,sp.lsl,sp.usl).pass;});
+  MD.item=itemId;MD.lots.forEach(l=>l.vals=[]);DB.meta.lastChange=Date.now();DB.meta.draft=MD;save();
+  mInit();refreshHeader();
+  $('#mRegMsg').innerHTML=`<b style="color:var(--good)">등록 완료</b> — 로트 ${pack.length}개, ${fint(total)}개, 합격률 ${pct(pass/total*100)} &nbsp;<button class="btn sm primary" id="mGoDash">대시보드에서 보기</button>`;
+  $('#mGoDash').onclick=()=>{fillFilter();$('#fItem').value=itemId;runLotSel='__all';showTab('dash');};
+  toast('등록했습니다');
+};
+
+/* =========================================================
+   보고서
+   ========================================================= */
+function initReport(){
+  const sel=$('#rpItem');sel.innerHTML=DB.items.map(i=>`<option value="${i.id}">${esc(itemLabel(i))}</option>`).join('');
+  if(sel.dataset.pre&&sel.dataset.pre!=='__all'){sel.value=sel.dataset.pre;$('#rpFrom').value=$('#rpFrom').dataset.pre||'';$('#rpTo').value=$('#rpTo').dataset.pre||'';}
+  else if(!sel.value&&DB.items.length)sel.value=DB.items[0].id;
+  sel.dataset.pre='';
+  if(!$('#rpDate').value)$('#rpDate').value=today();
+  if(!$('#rpAuthor').value)$('#rpAuthor').value=DB.meta.author||'';
+  rpLots();
+}
+['#rpItem','#rpFrom','#rpTo'].forEach(s=>$(s).addEventListener('change',()=>{$('#rpTitle').dataset.touched='';rpLots();}));
+$('#rpTitle').addEventListener('input',()=>$('#rpTitle').dataset.touched='1');
+function rpLots(){
+  const it=itemById($('#rpItem').value);const box=$('#rpLots');if(!it){box.innerHTML='<span class="muted">등록된 품목이 없습니다.</span>';return;}
+  const lots=lotsOf(it.id,$('#rpFrom').value,$('#rpTo').value);
+  if(!$('#rpTitle').dataset.touched){const tt=[...new Set(lots.map(l=>l.title).filter(Boolean))];$('#rpTitle').value=tt.length===1?tt[0]+' 결과 보고':`${it.code||it.name} ${it.prop||''} 전수검사 결과 보고`.replace(/\s+/g,' ');}
+  box.innerHTML=lots.length?`<div class="small" style="margin-bottom:4px"><b>포함할 로트</b> <a href="#" id="rpAllOn">전체 선택</a> · <a href="#" id="rpAllOff">전체 해제</a></div><div style="display:flex;flex-wrap:wrap;gap:6px 16px">`+lots.map(l=>`<label class="small"><input type="checkbox" class="rpL" value="${l.id}" checked> ${l.date} ${esc(l.lotNo||'')} (${fint(l.values.length)}개)</label>`).join('')+'</div>':'<span class="muted">해당 기간에 로트가 없습니다.</span>';
+  if(lots.length){$('#rpAllOn').onclick=e=>{e.preventDefault();$$('.rpL').forEach(c=>c.checked=true);};$('#rpAllOff').onclick=e=>{e.preventDefault();$$('.rpL').forEach(c=>c.checked=false);};}
+}
+let REP=null;
+$('#rpMake').onclick=makeReport;
+function chartImg(fn,w,h){const cv=document.createElement('canvas');fn(cv,{w,h,scale:2});return cv.toDataURL('image/png');}
+function makeReport(){
+  const it=itemById($('#rpItem').value);if(!it){alert('품목을 고르세요.');return;}
+  const ids=new Set($$('.rpL:checked').map(c=>c.value));const lots=lotsOf(it.id,$('#rpFrom').value,$('#rpTo').value).filter(l=>ids.has(l.id));
+  if(!lots.length){alert('포함할 로트를 하나 이상 고르세요.');return;}
+  if((DB.meta.author||'')!==$('#rpAuthor').value){DB.meta.author=$('#rpAuthor').value;save();}
+  const excl=$('#rpExcl').checked;const u=it.unit||'',d=it.decimals!=null?it.decimals:2;
+  const st=calc(lots,{excl,lsl:lots[lots.length-1].lsl,usl:lots[lots.length-1].usl});const A=analyze(st,lots,it,excl);const rows=lotRows(lots,d);
+  const period=lots[0].date===lots[lots.length-1].date?lots[0].date:`${lots[0].date} ~ ${lots[lots.length-1].date}`;
+  const insp=[...new Set(lots.map(l=>l.inspector).filter(Boolean))].join(', ');
+  const W=720;
+  const imgH=chartImg((cv,o)=>drawHist(cv,st,{...o,unit:u,dec:d}),W,270);
+  const allV=[].concat(...lots.map(l=>l.values));let acc=0;const bounds=lots.length>1?lots.map(l=>{const b={i:acc,label:l.date.slice(5)+(l.lotNo?' '+l.lotNo:'')};acc+=l.values.length;return b;}):[];
+  const imgR=chartImg((cv,o)=>drawRun(cv,allV,{...o,lsl:st.lsl,usl:st.usl,stat:calc(lots),dec:d,unit:u,bounds}),W,250);
+  const rot=rows.length>8;
+  const imgS=lots.length>1?chartImg((cv,o)=>drawStack(cv,rows.map(r=>r.label),[{name:'합격',color:C.pass,values:rows.map(r=>r.pass)},{name:'상한 초과',color:C.over,values:rows.map(r=>r.over)},{name:'하한 미달',color:C.under,values:rows.map(r=>r.under)}],{...o,rot}),W,240):null;
+  const imgL=lots.length>1?chartImg((cv,o)=>drawLotRange(cv,rows,{...o,lsl:st.lsl,usl:st.usl,dec:d,unit:u,rot}),W,240):null;
+  const lgd=`<span style="color:${C.pass}">■</span> 합격 &nbsp;<span style="color:${C.over}">■</span> 상한 초과 &nbsp;<span style="color:${C.under}">■</span> 하한 미달 &nbsp;- - 규격선`;
+  const LOTTBL=`<table><tr><th>검사일</th><th>로트</th><th>수량</th><th>합격</th><th>상한 초과</th><th>하한 미달</th><th>합격률</th><th>평균</th><th>표준편차</th><th>최소</th><th>최대</th></tr>`+
+      rows.map(r=>`<tr><td>${r.lot.date}</td><td>${esc(r.lot.lotNo||'')}</td><td class="num">${fint(r.n)}</td><td class="num">${fint(r.pass)}</td><td class="num">${fint(r.over)}</td><td class="num">${fint(r.under)}</td><td class="num">${pct(r.rate)}</td><td class="num">${fmt(r.mean,d)}</td><td class="num">${fmt(r.sd,d+1)}</td><td class="num">${fmt(r.min,d)}</td><td class="num">${fmt(r.max,d)}</td></tr>`).join('')+
+      (rows.length>1?`<tr style="font-weight:700;background:#f7f8fa"><td colspan="2">합계</td><td class="num">${fint(st.n)}</td><td class="num">${fint(st.pass)}</td><td class="num">${fint(st.over)}</td><td class="num">${fint(st.under)}</td><td class="num">${pct(st.rate)}</td><td class="num">${fmt(st.mean,d)}</td><td class="num">${fmt(st.sd,d+1)}</td><td class="num">${fmt(st.allMin,d)}</td><td class="num">${fmt(st.allMax,d)}</td></tr>`:'')+`</table>`
+      ;
+  const rk=(k,v,cls)=>`<div class="rkpi ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  const sign=$('#rpSign').checked?`<div class="sign"><table><tr><th>담당</th><th>검토</th><th>승인</th></tr><tr><td></td><td></td><td></td></tr></table></div>`:'';
+  const co=DB.meta.company||'',lg=DB.meta.logo||'';
+  const brand=$('#rpLogo').checked&&(co||lg)?`<div class="rlogo">${lg?`<img src="${lg}">`:''}<span>${esc(co)}</span></div>`:'';
+  let p1=`<div class="page"><div class="rhead"><div style="flex:1">${brand}<h1 class="editable" contenteditable="true">${esc($('#rpTitle').value)}</h1></div>${sign}</div>
+    <div class="rmeta"><span>보고일: ${$('#rpDate').value}</span><span>작성: ${esc($('#rpAuthor').value||'-')}</span><span>검사 기간: ${period}</span></div>
+    <h2>1. 검사 개요</h2>
+    <table><tr><th style="width:18%">품목</th><td>${esc(itemLabel(it))}</td><th style="width:18%">측정 항목</th><td>${esc(it.prop||'-')} (${esc(u||'-')})</td></tr>
+    <tr><th>규격</th><td>${specText(st.lsl,st.usl,u)}</td><th>검사 방식</th><td>전수검사</td></tr>
+    <tr><th>검사 로트</th><td>${lots.length}개</td><th>검사자</th><td>${esc(insp||'-')}</td></tr></table>
+    <h2>2. 검사 결과</h2>
+    <div class="rkpis">${rk('검사 수량',fint(st.n)+'개')}${rk('합격',fint(st.pass)+'개')}${rk('불합격',fint(st.fail)+'개',st.fail?'bad':'good')}${rk('합격률',pct(st.rate),rateClass(st.rate,it.targetRate))}
+    ${rk('평균',fmt(st.mean,d)+' '+esc(u),(st.usl!=null&&st.mean>st.usl)||(st.lsl!=null&&st.mean<st.lsl)?'bad':'')}${rk('표준편차',fmt(st.sd,d+1))}${rk('최소 / 최대',fmt(st.allMin,d)+' / '+fmt(st.allMax,d))}${rk('Cpk',st.cpk!=null?st.cpk.toFixed(2):'-',cpkClass(st.cpk))}</div>
+    <table style="margin-top:6px"><tr><th>구분</th><th>합격</th><th>상한 초과</th><th>하한 미달</th><th>계</th></tr>
+    <tr><td style="text-align:center">수량</td><td class="num">${fint(st.pass)}</td><td class="num">${fint(st.over)}</td><td class="num">${fint(st.under)}</td><td class="num">${fint(st.n)}</td></tr>
+    <tr><td style="text-align:center">비율</td><td class="num">${pct(st.rate)}</td><td class="num">${pct(st.over/st.n*100)}</td><td class="num">${pct(st.under/st.n*100)}</td><td class="num">100%</td></tr></table>
+    <h2>3. 분석 및 판정</h2>
+    <div class="verdict ${A.vc} editable" contenteditable="true">${A.verdict}</div>
+    <div class="editable" contenteditable="true" id="repAna"><ul>${A.lines.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <h2>4. 향후 조치</h2>
+    <div class="editable" contenteditable="true" id="repAct" style="min-height:14mm"><ul><li>${defaultAction(st,it)}</li><li>&nbsp;</li></ul></div>
+  </div>`;
+  let p2=`<div class="page"><h2 style="margin-top:0">5. 그래프</h2>
+    <div class="cap">${lgd}</div>
+    <img src="${imgH}"><div class="cap">[그림 1] 측정값 분포 — 파란 음영이 규격 범위, 검은 실선이 평균</div>
+    <img src="${imgR}"><div class="cap">[그림 2] 측정 순서별 값 — 검은 선은 이동평균${lots.length>1?', 점선은 로트 경계':''}</div>
+    ${imgS?`<img src="${imgS}"><div class="cap">[그림 3] 로트별 판정 수량</div>`:''}
+    ${lots.length===1&&$('#rpLotTbl').checked?'<h2>6. 로트별 상세</h2>'+LOTTBL+(lots[0].memo?`<p class="cap">특이사항: ${esc(lots[0].memo)}</p>`:''):''}
+  </div>`;
+  let p3='';
+  if(imgL||($('#rpLotTbl').checked&&lots.length>1)){
+    p3=`<div class="page">${imgL?`<h2 style="margin-top:0">${imgS?'5. 그래프 (계속)':'6. 로트별 평균'}</h2><img src="${imgL}"><div class="cap">[그림 4] 로트별 평균(점)과 산포 — 막대: 가운데 50%, 선: 5~95% 범위</div>`:''}
+    ${$('#rpLotTbl').checked&&lots.length>1?`<h2 ${imgL?'':'style="margin-top:0"'}>6. 로트별 상세</h2>`+LOTTBL+(lots.some(l=>l.memo)?`<h2>특이사항</h2><ul>${lots.filter(l=>l.memo).map(l=>`<li>${l.date} ${esc(l.lotNo||'')}: ${esc(l.memo)}</li>`).join('')}</ul>`:''):''}
+    <p style="font-size:9pt;color:#666;margin-top:14px">※ 합격 기준: 규격 하한 ≤ 측정값 ≤ 규격 상한. Cpk 1.33 이상 양호, 1.00 미만 공정능력 부족. 극단값은 규격 밖이면서 중앙값에서 표준편차 5배 넘게 떨어진 값.${excl?' 평균·표준편차·Cpk는 극단값을 빼고 계산함.':''}</p></div>`;
+  }
+  $('#reportArea').innerHTML=p1+p2+p3;$('#rpTools').style.display='';
+  REP={it,st,A,rows,d,title:$('#rpTitle').value,period};
+  $('#rpTools').scrollIntoView({behavior:'smooth'});
+}
+function defaultAction(st,it){
+  const u=it.unit||'';
+  if(st.usl!=null&&st.mean>st.usl)return `중량(측정값) 중심을 낮추는 방향으로 공정 조건 재설정 후 재검사 (목표 평균 ${((st.lsl!=null?st.lsl:st.usl)+st.usl)/2}${u} 부근)`;
+  if(st.lsl!=null&&st.mean<st.lsl)return `측정값 중심을 올리는 방향으로 공정 조건 재설정 후 재검사`;
+  if(st.rate<95)return '불량 발생 구간의 공정 조건 확인 및 산포 저감 방안 검토';
+  return '현 조건 유지, 정기 전수검사로 추이 관리';
+}
+$('#rpPrint').onclick=()=>window.print();
+$('#rpCopyText').onclick=()=>{if(!REP)return;const v=$('#reportArea .verdict').innerText;const a=$('#repAna').innerText;const c=$('#repAct').innerText;
+  copyText(`[${REP.title}]\n검사 기간: ${REP.period}\n${v}\n\n■ 분석\n${a.split('\n').filter(x=>x.trim()).map(x=>'- '+x.trim()).join('\n')}\n\n■ 향후 조치\n${c.split('\n').filter(x=>x.trim()).map(x=>'- '+x.trim()).join('\n')}`);};
+$('#rpCopyTbl').onclick=()=>{if(!REP)return;const s=REP.st;copyText(`구분\t값\n검사 수량\t${s.n}\n합격\t${s.pass}\n상한 초과\t${s.over}\n하한 미달\t${s.under}\n합격률(%)\t${s.rate.toFixed(2)}\n평균\t${s.mean.toFixed(REP.d+1)}\n표준편차\t${s.sd.toFixed(REP.d+2)}\n최소\t${s.allMin}\n최대\t${s.allMax}\nCpk\t${s.cpk!=null?s.cpk.toFixed(3):''}\n\n`+lotTSV(REP.rows,REP.d));};
+$('#rpHtml').onclick=()=>{
+  if(!REP)return;const css=[...document.styleSheets[0].cssRules].map(r=>r.cssText).filter(t=>/^(\.page|\.rk|\.verdict|\.sign|\.editable|@media print|@page)/.test(t)).join('\n');
+  const body=$('#reportArea').innerHTML.replace(/ contenteditable="true"/g,'');
+  const html=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>${esc(REP.title)}</title><style>body{margin:0;background:#e9ebee;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;padding:20px 0}${css}\n@media print{body{background:#fff;padding:0}.page{box-shadow:none;margin:0}}</style></head><body>${body}</body></html>`;
+  download(`${REP.title.replace(/[\\/:*?"<>|]/g,'_')}_${today()}.html`,html,'text/html;charset=utf-8');
+};
+
+/* =========================================================
+   데이터 관리
+   ========================================================= */
+function renderData(){
+  refreshHeader();
+  const sel=$('#dmItem');const cur=sel.value;sel.innerHTML=`<option value="">전체 품목</option>`+DB.items.map(i=>`<option value="${i.id}">${esc(itemLabel(i))}</option>`).join('');sel.value=cur&&[...sel.options].some(o=>o.value===cur)?cur:'';
+  const lots=lotsOf(sel.value||null).reverse();
+  applyBrand();
+  if(SERVER){
+    $('#storeNotice').innerHTML=`검사 데이터는 <b>${esc(SERVER.dataFile)}</b> 파일에 자동 저장됩니다. 하루 한 번 backup 폴더에 날짜별 사본이 남습니다. 다른 PC로 옮길 때는 프로그램(exe)과 data 폴더를 같이 복사하세요.`;
+    $('#openFolder').style.display='';
+    const sz=new Blob([JSON.stringify(DB)]).size;
+    $('#storeInfo').innerHTML=`데이터 파일 크기 약 ${(sz/1024/1024).toFixed(2)}MB · 마지막 수동 백업: ${DB.meta.lastBackup?new Date(DB.meta.lastBackup).toLocaleString('ko-KR'):'없음'}`;
+  }else{
+    let used=0;try{used=(localStorage.getItem(KEY)||'').length*2;}catch(e){}
+    $('#storeInfo').innerHTML=`저장 사용량 약 ${(used/1024/1024).toFixed(2)}MB / 브라우저 한도 약 5MB · 마지막 백업: ${DB.meta.lastBackup?new Date(DB.meta.lastBackup).toLocaleString('ko-KR'):'없음'}`;
+  }
+  if(!lots.length){$('#lotTable').innerHTML='<div class="empty">등록된 로트가 없습니다.</div>';return;}
+  $('#lotTable').innerHTML=`<table class="tbl"><thead><tr><th>검사일</th><th>품목</th><th>로트</th><th>검사자</th><th>라인</th><th>규격</th><th class="num">수량</th><th class="num">합격률</th><th>입력</th><th>메모</th><th></th></tr></thead><tbody>`+
+    lots.map(l=>{const it=itemById(l.itemId);const j=judgeCounts(l.values,l.lsl,l.usl);const r=j.pass/l.values.length*100;
+      return `<tr><td>${l.date}</td><td>${esc(itemLabel(it))}</td><td>${esc(l.lotNo||'')}</td><td>${esc(l.inspector||'')}</td><td>${esc(l.line||'')}</td><td>${specText(l.lsl,l.usl,it&&it.unit)}</td><td class="num">${fint(l.values.length)}</td><td class="num"><span class="badge ${rateClass(r,it&&it.targetRate)}">${pct(r)}</span></td><td class="small muted">${esc(l.source||'')}</td><td class="small">${esc(l.memo||'')}</td>
+      <td style="white-space:nowrap"><button class="btn sm" data-view="${l.id}">보기</button> <button class="btn sm" data-edit="${l.id}">수정</button> <button class="btn sm" data-cpv="${l.id}">값 복사</button> <button class="btn sm danger" data-del="${l.id}">삭제</button></td></tr>`;}).join('')+'</tbody></table>';
+}
+$('#dmItem').addEventListener('change',renderData);
+$('#lotTable').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.del){const l=DB.lots.find(x=>x.id===b.dataset.del);if(confirm(`${l.date} ${l.lotNo||''} (${l.values.length}개) 로트를 삭제할까요?\n되돌릴 수 없습니다.`)){DB.lots=DB.lots.filter(x=>x.id!==l.id);DB.meta.lastChange=Date.now();save();renderData();toast('삭제했습니다');}}
+  if(b.dataset.view){const l=DB.lots.find(x=>x.id===b.dataset.view);fillFilter();$('#fItem').value=l.itemId;runLotSel=l.id;showTab('dash');}
+  if(b.dataset.cpv){const l=DB.lots.find(x=>x.id===b.dataset.cpv);copyText(l.values.join('\n'));}
+  if(b.dataset.edit)editLot(b.dataset.edit);
+});
+function openModal(html){$('#modalBody').innerHTML=html;$('#modal').classList.add('on');}
+function closeModal(){$('#modal').classList.remove('on');}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+function editLot(id){
+  const l=DB.lots.find(x=>x.id===id);
+  openModal(`<h2>로트 정보 수정</h2>
+  <div class="row"><div class="field"><label>품목</label><select id="eItem">${DB.items.map(i=>`<option value="${i.id}" ${i.id===l.itemId?'selected':''}>${esc(itemLabel(i))}</option>`).join('')}</select></div><div class="field"><label>검사일</label><input type="date" id="eDate" value="${l.date}"></div></div>
+  <div class="row"><div class="field"><label>로트 번호</label><input type="text" id="eLot" value="${esc(l.lotNo||'')}"></div><div class="field"><label>검사자</label><input type="text" id="eInsp" value="${esc(l.inspector||'')}"></div><div class="field"><label>라인/설비</label><input type="text" id="eLine" value="${esc(l.line||'')}"></div></div>
+  <div class="row"><div class="field"><label>규격 하한</label><input type="number" step="any" id="eLsl" value="${l.lsl??''}"></div><div class="field"><label>규격 상한</label><input type="number" step="any" id="eUsl" value="${l.usl??''}"></div></div>
+  <div class="field" style="margin-bottom:12px"><label>메모</label><input type="text" id="eMemo" value="${esc(l.memo||'')}"></div>
+  <div class="field" style="margin-bottom:12px"><label>측정값 (${l.values.length}개, 한 줄에 하나 — 고치면 그대로 반영)</label><textarea id="eVals" rows="6">${l.values.join('\n')}</textarea></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">취소</button><button class="btn primary" id="eSave">저장</button></div>`);
+  $('#eSave').onclick=()=>{
+    const vals=$('#eVals').value.split(/[\s,;]+/).map(numOf).filter(v=>v!=null);if(!vals.length){alert('측정값이 비었습니다.');return;}
+    const a=$('#eLsl').value.trim(),b=$('#eUsl').value.trim();
+    Object.assign(l,{itemId:$('#eItem').value,date:$('#eDate').value,lotNo:$('#eLot').value.trim(),inspector:$('#eInsp').value.trim(),line:$('#eLine').value.trim(),memo:$('#eMemo').value.trim(),lsl:a===''?null:+a,usl:b===''?null:+b,values:vals});
+    DB.meta.lastChange=Date.now();save();closeModal();renderData();toast('저장했습니다');};
+}
+function doBackup(){
+  DB.meta.lastBackup=Date.now();save();
+  download(`전수검사데이터_백업_${today()}.json`,JSON.stringify({app:'insp_dash',version:1,exported:new Date().toISOString(),...DB}),'application/json');
+  backupNotice();if($('#p-data').classList.contains('on'))renderData();toast('백업 파일을 저장했습니다');
+}
+$('#bkSave').onclick=doBackup;
+let bkMode='merge';
+$('#bkLoad').onclick=()=>{bkMode='merge';$('#bkFile').click();};
+$('#bkReplace').onclick=()=>{bkMode='replace';$('#bkFile').click();};
+$('#bkFile').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const o=JSON.parse(await f.text());if(!o.items||!o.lots)throw new Error('백업 파일 형식이 아닙니다.');
+    if(bkMode==='replace'){if(!confirm(`지금 데이터를 모두 지우고 백업 파일 내용(품목 ${o.items.length}개, 로트 ${o.lots.length}개)으로 바꿀까요?`))return;DB={items:o.items,lots:o.lots,meta:{...(o.meta||{}),lastChange:Date.now()}};}
+    else{let ai=0,al=0;for(const it of o.items)if(!itemById(it.id)){DB.items.push(it);ai++;}for(const l of o.lots)if(!DB.lots.some(x=>x.id===l.id)){DB.lots.push(l);al++;}DB.meta.lastChange=Date.now();alert(`합치기 완료: 품목 ${ai}개, 로트 ${al}개 추가 (이미 있던 항목은 건너뜀)`);}
+    save();renderData();toast('불러왔습니다');
+  }catch(err){alert('불러오기 실패: '+err.message);}
+});
+$('#csvRaw').onclick=()=>{
+  const lines=['품목,품번,검사일,로트,검사자,라인,규격하한,규격상한,순번,측정값,판정'];
+  for(const l of lotsOf(null)){const it=itemById(l.itemId)||{};l.values.forEach((v,i)=>{const j=(l.usl!=null&&v>l.usl)?'상한초과':(l.lsl!=null&&v<l.lsl)?'하한미달':'합격';
+    lines.push([it.name,it.code,l.date,l.lotNo,l.inspector,l.line,l.lsl??'',l.usl??'',i+1,v,j].map(x=>`"${String(x??'').replace(/"/g,'""')}"`).join(','));});}
+  download(`측정값전체_${today()}.csv`,'﻿'+lines.join('\r\n'),'text/csv;charset=utf-8');
+};
+function lotSummaryTSV(){
+  const h=['품목','품번','검사일','로트','검사자','라인','규격하한','규격상한','수량','합격','상한초과','하한미달','합격률(%)','평균','표준편차','최소','최대','Cpk','메모'];
+  return [h.join('\t')].concat(lotsOf(null).map(l=>{const it=itemById(l.itemId)||{};const s=calc([l]);return [it.name,it.code||'',l.date,l.lotNo||'',l.inspector||'',l.line||'',l.lsl??'',l.usl??'',s.n,s.pass,s.over,s.under,s.rate.toFixed(2),s.mean.toFixed(4),s.sd.toFixed(4),s.allMin,s.allMax,s.cpk!=null?s.cpk.toFixed(3):'',l.memo||''].join('\t');})).join('\n');
+}
+$('#csvLot').onclick=()=>download(`로트요약_${today()}.csv`,'﻿'+lotSummaryTSV().split('\n').map(r=>r.split('\t').map(x=>`"${x.replace(/"/g,'""')}"`).join(',')).join('\r\n'),'text/csv;charset=utf-8');
+$('#copyLot').onclick=()=>copyText(lotSummaryTSV());
+$('#wipe').onclick=()=>{if(!DB.lots.length&&!DB.items.length)return;if(!confirm('모든 품목과 검사 데이터를 삭제합니다. 백업 파일을 먼저 저장했는지 확인하세요.\n\n계속할까요?'))return;if(prompt('정말 삭제하려면  삭제  라고 입력하세요')!=='삭제')return;DB={items:[],lots:[],meta:{}};save();renderData();toast('모두 삭제했습니다');};
+
+/* =========================================================
+   품목 설정
+   ========================================================= */
+function renderItems(){
+  if(!DB.items.length){$('#itemTable').innerHTML='<div class="empty">품목이 없습니다. 데이터를 등록하면 자동으로 만들어지고, [품목 추가]로 미리 만들 수도 있습니다.</div>';return;}
+  $('#itemTable').innerHTML=`<table class="tbl"><thead><tr><th>품목명</th><th>품번</th><th>측정 항목</th><th>단위</th><th class="num">규격 하한</th><th class="num">규격 상한</th><th class="num">목표 합격률</th><th class="num">소수 자리</th><th class="num">로트 수</th><th></th></tr></thead><tbody>`+
+    DB.items.map(i=>`<tr><td><b>${esc(i.name)}</b></td><td>${esc(i.code||'')}</td><td>${esc(i.prop||'')}</td><td>${esc(i.unit||'')}</td><td class="num">${i.lsl??'-'}</td><td class="num">${i.usl??'-'}</td><td class="num">${i.targetRate?i.targetRate+'%':'-'}</td><td class="num">${i.decimals??2}</td><td class="num">${DB.lots.filter(l=>l.itemId===i.id).length}</td>
+    <td style="white-space:nowrap"><button class="btn sm" data-ied="${i.id}">수정</button> <button class="btn sm danger" data-idel="${i.id}">삭제</button></td></tr>`).join('')+'</tbody></table>';
+}
+$('#itemTable').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.ied)editItem(b.dataset.ied);
+  if(b.dataset.idel){const it=itemById(b.dataset.idel);const n=DB.lots.filter(l=>l.itemId===it.id).length;
+    if(confirm(`${it.name} 품목을 삭제할까요?`+(n?`\n이 품목의 로트 ${n}개도 함께 삭제됩니다.`:''))){DB.items=DB.items.filter(x=>x.id!==it.id);DB.lots=DB.lots.filter(l=>l.itemId!==it.id);DB.meta.lastChange=Date.now();save();renderItems();toast('삭제했습니다');}}
+});
+$('#addItem').onclick=()=>editItem(null);
+function editItem(id){
+  const i=id?itemById(id):{name:'',code:'',prop:'중량',unit:'',lsl:null,usl:null,targetRate:null,decimals:2};
+  openModal(`<h2>${id?'품목 수정':'품목 추가'}</h2>
+  <div class="row"><div class="field"><label>품목명</label><input type="text" id="iName" value="${esc(i.name)}" style="width:220px"></div><div class="field"><label>품번/코드</label><input type="text" id="iCode" value="${esc(i.code||'')}"></div></div>
+  <div class="row"><div class="field"><label>측정 항목</label><input type="text" id="iProp" value="${esc(i.prop||'')}"></div><div class="field"><label>단위</label><input type="text" id="iUnit" value="${esc(i.unit||'')}" style="width:80px"></div><div class="field"><label>소수 자리</label><input type="number" id="iDec" value="${i.decimals??2}" min="0" max="4" style="width:80px"></div></div>
+  <div class="row"><div class="field"><label>규격 하한</label><input type="number" step="any" id="iLsl" value="${i.lsl??''}"></div><div class="field"><label>규격 상한</label><input type="number" step="any" id="iUsl" value="${i.usl??''}"></div><div class="field"><label>목표 합격률(%)</label><input type="number" step="any" id="iTgt" value="${i.targetRate??''}" placeholder="예: 95"></div></div>
+  <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn" onclick="closeModal()">취소</button><button class="btn primary" id="iSave">저장</button></div>`);
+  $('#iSave').onclick=()=>{
+    const name=$('#iName').value.trim();if(!name){alert('품목명을 입력하세요.');return;}
+    const a=$('#iLsl').value.trim(),b=$('#iUsl').value.trim(),t=$('#iTgt').value.trim();
+    const nv={name,code:$('#iCode').value.trim(),prop:$('#iProp').value.trim(),unit:$('#iUnit').value.trim(),decimals:Math.max(0,Math.min(4,+$('#iDec').value||0)),lsl:a===''?null:+a,usl:b===''?null:+b,targetRate:t===''?null:+t};
+    if(id){const specChanged=i.lsl!==nv.lsl||i.usl!==nv.usl;Object.assign(i,nv);
+      const ls=DB.lots.filter(l=>l.itemId===id);
+      if(specChanged&&ls.length&&confirm(`이미 등록된 로트 ${ls.length}개의 규격도 새 규격(${specText(nv.lsl,nv.usl,nv.unit)})으로 바꿀까요?\n[취소]를 누르면 기존 로트는 원래 규격으로 판정합니다.`))ls.forEach(l=>{l.lsl=nv.lsl;l.usl=nv.usl;});}
+    else DB.items.push({id:uid(),...nv,createdAt:Date.now()});
+    DB.meta.lastChange=Date.now();save();closeModal();renderItems();toast('저장했습니다');};
+}
+
+/* =========================================================
+   시작
+   ========================================================= */
+$('#openFolder').onclick=()=>fetch('/api/open-folder',{method:'POST',headers:{'X-Token':TOKEN}});
+$('#coName').addEventListener('change',()=>{DB.meta.company=$('#coName').value.trim();save();applyBrand();toast('회사명을 저장했습니다');});
+$('#logoPick').onclick=()=>$('#logoFile').click();
+$('#logoDel').onclick=()=>{if(!DB.meta.logo)return;if(confirm('로고를 지울까요?')){DB.meta.logo='';save();applyBrand();}};
+$('#logoFile').addEventListener('change',e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const url=rd.result;
+    if(/svg/.test(f.type)){DB.meta.logo=url;save();applyBrand();toast('로고를 넣었습니다');return;}
+    const im=new Image();im.onload=()=>{
+      const k=Math.min(1,600/im.width,240/im.height);const cv=document.createElement('canvas');cv.width=Math.round(im.width*k);cv.height=Math.round(im.height*k);
+      cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);DB.meta.logo=cv.toDataURL('image/png');save();applyBrand();toast('로고를 넣었습니다');};
+    im.onerror=()=>alert('이미지를 읽지 못했습니다.');im.src=url;};
+  rd.readAsDataURL(f);
+});
+
+/* =========================================================
+   자동 업데이트 (GitHub: JJun-2/HBS)
+   ========================================================= */
+const APP_VER=(document.querySelector('meta[name="app-version"]')||{}).content||'0';
+const UPD_BASE='https://raw.githubusercontent.com/JJun-2/HBS/main/';
+const REPO_URL='https://github.com/JJun-2/HBS';
+function verCmp(a,b){const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<Math.max(x.length,y.length);i++){const d=(x[i]||0)-(y[i]||0);if(d)return d>0?1:-1;}return 0;}
+async function fetchT(url,ms,type){const ac=new AbortController();const t=setTimeout(()=>ac.abort(),ms);
+  try{const r=await fetch(url,{cache:'no-store',signal:ac.signal});if(!r.ok)throw new Error('HTTP '+r.status);return type==='buf'?await r.arrayBuffer():type==='json'?await r.json():await r.text();}finally{clearTimeout(t);}}
+async function sha256hex(buf){const h=await crypto.subtle.digest('SHA-256',buf);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+function updState(t){$('#updState').textContent=t?'· '+t:'';}
+function notesHtml(n){return Array.isArray(n)&&n.length?'<ul>'+n.slice(0,6).map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':'';}
+function banner(html,err){$('#updBanner').innerHTML=`<div class="upd no-print${err?' err':''}">${html}<button class="btn sm" style="margin-left:auto" onclick="this.parentElement.remove()">닫기</button></div>`;}
+let updBusy=false;
+async function checkUpdate(manual){
+  if(updBusy)return;updBusy=true;updState('업데이트 확인 중…');
+  try{
+    let v;
+    try{v=await fetchT(UPD_BASE+'version.json?t='+Date.now(),8000,'json');}
+    catch(e){updState('');if(manual)alert('업데이트 서버(GitHub)에 연결하지 못했습니다.\n인터넷 연결을 확인하세요. (인터넷이 없어도 프로그램은 그대로 쓸 수 있습니다)');return;}
+    if(!SERVER){ // HTML 파일로 연 경우: 안내만
+      if(verCmp(v.version,APP_VER)>0){banner(`<div><b>새 버전 v${esc(v.version)}</b>이 있습니다.${notesHtml(v.notes)}</div><a class="btn sm primary" href="${REPO_URL}" target="_blank">내려받으러 가기</a>`);updState('새 버전 있음');}
+      else{updState('최신 버전');if(manual)toast('최신 버전입니다 (v'+APP_VER+')');}
+      return;
+    }
+    const did=[];
+    if(v.app&&verCmp(v.version,SERVER.appVersion||APP_VER)>0){
+      updState('새 버전 받는 중…');
+      const buf=await fetchT(UPD_BASE+v.app+'?t='+Date.now(),90000,'buf');
+      if(v.app_sha256&&(await sha256hex(buf))!==String(v.app_sha256).toLowerCase())throw new Error('받은 화면 파일이 손상되었습니다 (검증 실패)');
+      const r=await fetch('/api/update/html',{method:'POST',headers:{'X-Token':TOKEN,'X-Version':v.version},body:buf});
+      if(!r.ok)throw new Error(await r.text());
+      SERVER.appVersion=v.version;did.push('app');
+    }
+    if(v.exe&&v.launcher&&verCmp(v.launcher,SERVER.launcher||'0')>0&&!SERVER.exePending){
+      updState('프로그램 본체 받는 중…');
+      const buf=await fetchT(UPD_BASE+v.exe+'?t='+Date.now(),300000,'buf');
+      const h=await sha256hex(buf);
+      if(v.exe_sha256&&h!==String(v.exe_sha256).toLowerCase())throw new Error('받은 실행 파일이 손상되었습니다 (검증 실패)');
+      const r=await fetch('/api/update/exe',{method:'POST',headers:{'X-Token':TOKEN,'X-Sha256':h,'X-Version':v.launcher},body:buf});
+      if(!r.ok)throw new Error(await r.text());
+      SERVER.exePending=v.launcher;did.push('exe');
+    }
+    if(verCmp(SERVER.appVersion||APP_VER,APP_VER)>0&&!did.includes('app'))did.push('app'); // 다른 창에서 이미 받은 경우
+    if(did.length){
+      updState('새 버전 준비됨');
+      const btn=did.includes('app')?`<button class="btn sm primary" onclick="applyUpdate()">지금 적용 (화면 새로고침)</button>`:'';
+      const ex=did.includes('exe')?' 프로그램 본체도 새로 받았습니다. 프로그램을 닫았다가 다시 열면 적용됩니다.':'';
+      banner(`<div><b>새 버전 v${esc(v.version)}을 받았습니다.</b>${did.includes('app')?' 입력 중인 내용은 저장되어 있으니 바로 적용해도 됩니다.':''}${ex}${notesHtml(v.notes)}</div>${btn}`);
+    }else{updState('최신 버전');if(manual)toast('최신 버전입니다 (v'+APP_VER+')');}
+  }catch(e){updState('업데이트 실패');banner(`<div>업데이트를 받지 못했습니다: ${esc(e.message)}<br><span class="small muted">지금 버전은 그대로 쓸 수 있습니다. 계속 실패하면 ${REPO_URL} 에서 새 파일을 직접 받으세요.</span></div>`,true);}
+  finally{updBusy=false;}
+}
+async function applyUpdate(){clearTimeout(mSaveT);if(MD){DB.meta.draft=MD;save();}try{await saveChain;}catch(e){}location.reload();}
+$('#updCheck').onclick=()=>checkUpdate(true);$('#updCheck2').onclick=()=>checkUpdate(true);
+(async()=>{
+  await load();
+  applyBrand();
+  $('#verInfo').textContent='v'+APP_VER+(SERVER?'':' (HTML)');
+  if(SERVER){setInterval(()=>fetch('/api/ping').catch(()=>{}),20000);fetch('/api/ping').catch(()=>{});}
+  $('#rDate').value=today();
+  renderDash();
+  setTimeout(()=>checkUpdate(false),1500);
+})();
+</script>
+</body>
+</html>
