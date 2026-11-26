@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="1.2.0">
+<meta name="app-version" content="1.2.1">
 <title>전수검사 데이터 분석 프로그램</title>
 <link rel="icon" href="/favicon.ico">
 <style>
@@ -22,14 +22,14 @@ button,input,select,textarea{font-family:inherit;font-size:14px}
 .app-header h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.3px}
 .brand{display:flex;align-items:center;gap:12px}
 .brand .logo{background:#fff;border-radius:6px;padding:3px 8px;height:38px;display:flex;align-items:center}
-.brand .logo img{max-height:32px;max-width:150px;display:block}
+.brand .logo img{max-height:32px;max-width:190px;display:block}
 .brand .co{font-size:12px;color:#b8c4d6;font-weight:600}
 .app-foot{max-width:1400px;margin:0 auto;padding:10px 20px 24px;color:var(--text3);font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .app-foot b{color:var(--text2)}
 .logo-prev{border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:160px;min-height:56px;display:flex;align-items:center;justify-content:center;background:#fff}
 .logo-prev img{max-height:48px;max-width:220px}
 .rlogo{display:flex;align-items:center;gap:8px;font-size:10pt;color:#333;font-weight:700;margin-bottom:6px}
-.rlogo img{max-height:13mm;max-width:45mm}
+.page .rlogo img{max-height:13mm;max-width:60mm;width:auto;border:0;margin:0}
 .app-header .sub{font-size:13px;color:#b8c4d6}
 .app-header .right{margin-left:auto;font-size:13px;color:#b8c4d6}
 nav.tabs{display:flex;gap:2px;background:#fff;border-bottom:1px solid var(--line);padding:0 16px;position:sticky;top:0;z-index:20}
@@ -405,9 +405,10 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
       <div class="field" style="min-width:240px"><label>회사명</label><input type="text" id="coName" placeholder="(주)한부솔루션"></div>
       <button class="btn" id="logoPick">로고 이미지 넣기</button>
       <button class="btn danger" id="logoDel">로고 지우기</button>
+      <button class="btn" id="logoReset">기본 로고로 되돌리기</button>
       <input type="file" id="logoFile" accept="image/png,image/jpeg,image/svg+xml,image/gif,image/bmp,image/webp" style="display:none">
     </div>
-    <p class="hint">PNG·JPG·SVG 가능. 배경이 투명한 PNG가 가장 깔끔합니다. 로고와 회사명은 프로그램 상단과 보고서 첫 장에 들어갑니다.</p>
+    <p class="hint">PNG·JPG·SVG 가능. 로고가 있으면 프로그램 상단과 보고서 첫 장에 로고만 들어가고, 로고가 없을 때만 회사명 글자가 대신 들어갑니다.</p>
   </div>
   <div class="card">
     <h2>백업 · 내보내기</h2>
@@ -538,7 +539,8 @@ function Phi(z){return 0.5*(1+erf(z/Math.SQRT2));}
 const KEY='insp_dash_v1';
 let DB={items:[],lots:[],meta:{}};
 let SERVER=null; // 실행 파일(exe)로 열었을 때: 데이터 파일 저장
-const TOKEN='__JTOKEN__'; // 실행 파일이 화면을 내보낼 때 채워 넣는 확인 값
+const TOKEN='__JTOKEN__';
+const DEFAULT_LOGO='data:image/png;base64,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'; // (주)한부솔루션 기본 로고 // 실행 파일이 화면을 내보낼 때 채워 넣는 확인 값
 async function load(){
   try{const r=await fetch('/api/info',{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&j.app==='JINSPECT-1')SERVER=j;}}catch(e){}
   if(SERVER){
@@ -548,6 +550,7 @@ async function load(){
   }
   DB.items=DB.items||[];DB.lots=DB.lots||[];DB.meta=DB.meta||{};
   if(DB.meta.company==null)DB.meta.company='(주)한부솔루션';
+  if(DB.meta.logo==null)DB.meta.logo=DEFAULT_LOGO; // 지운 경우('')는 그대로 둠
 }
 let saveChain=Promise.resolve(),saveFailShown=false;
 function save(){
@@ -564,7 +567,7 @@ function save(){
 function applyBrand(){
   const lg=DB.meta.logo,co=DB.meta.company||'';
   $('#hdrLogoBox').style.display=lg?'':'none';if(lg)$('#hdrLogo').src=lg;
-  $('#hdrCo').textContent=co;
+  $('#hdrCo').textContent=lg?'':co;$('#hdrCo').style.display=lg?'none':'';
   $('#logoPrev').innerHTML=lg?`<img src="${lg}" alt="로고">`:'<span class="muted small">로고 없음</span>';
   if(document.activeElement!==$('#coName'))$('#coName').value=co;
   document.title=(co?co+' · ':'')+'전수검사 데이터 분석 프로그램';
@@ -1513,7 +1516,7 @@ function makeReport(){
   const SIGN=['담당','검토','검토','검토','승인'];
   const sign=$('#rpSign').checked?`<div class="sign"><table><tr>${SIGN.map(x=>`<th>${x}</th>`).join('')}</tr><tr>${SIGN.map(()=>'<td></td>').join('')}</tr></table></div>`:'';
   const co=DB.meta.company||'',lg=DB.meta.logo||'';
-  const brand=$('#rpLogo').checked&&(co||lg)?`<div class="rlogo">${lg?`<img src="${lg}">`:''}<span>${esc(co)}</span></div>`:'';
+  const brand=$('#rpLogo').checked&&(co||lg)?`<div class="rlogo">${lg?`<img src="${lg}" alt="${esc(co)}">`:`<span>${esc(co)}</span>`}</div>`:'';
   let p1=`<div class="page"><div class="rhead"><div style="flex:1">${brand}<h1 class="editable" contenteditable="true">${esc($('#rpTitle').value)}</h1></div>${sign}</div>
     <div class="rmeta"><span>보고일: ${$('#rpDate').value}</span><span>작성: ${esc($('#rpAuthor').value||'-')}</span><span>검사 기간: ${period}</span></div>
     <h2>1. 검사 개요</h2>
@@ -1919,6 +1922,7 @@ function editItem(id){
 $('#openFolder').onclick=()=>fetch('/api/open-folder',{method:'POST',headers:{'X-Token':TOKEN}});
 $('#coName').addEventListener('change',()=>{DB.meta.company=$('#coName').value.trim();save();applyBrand();toast('회사명을 저장했습니다');});
 $('#logoPick').onclick=()=>$('#logoFile').click();
+$('#logoReset').onclick=()=>{DB.meta.logo=DEFAULT_LOGO;save();applyBrand();toast('기본 로고로 되돌렸습니다');};
 $('#logoDel').onclick=()=>{if(!DB.meta.logo)return;if(confirm('로고를 지울까요?')){DB.meta.logo='';save();applyBrand();}};
 $('#logoFile').addEventListener('change',e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;

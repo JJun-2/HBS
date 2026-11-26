@@ -32,7 +32,7 @@ git add -A && git commit -m "v1.2.0" && git push
 ```
 cd src
 cp ../app.html .
-python mkicon.py            # 아이콘 리소스(rsrc_windows_amd64.syso) 생성, 로고 이미지가 있으면: python mkicon.py logo.png
+python mkicon.py mark.png   # 회사 로고 H 마크로 아이콘 리소스(rsrc_windows_amd64.syso) 생성
 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H windowsgui -s -w" -o ../release/HBS_Inspection.exe .
 ```
 

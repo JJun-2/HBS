@@ -11,7 +11,8 @@ def draw_icon(size=256, logo=None):
         lg=Image.open(logo).convert('RGBA')
         pad=int(size*0.1)
         box=size-2*pad
-        lg.thumbnail((box,box),Image.LANCZOS)
+        k=min(box/lg.width,box/lg.height)
+        lg=lg.resize((max(1,round(lg.width*k)),max(1,round(lg.height*k))),Image.LANCZOS)
         bg=Image.new('RGBA',(size,size),(0,0,0,0));bd=ImageDraw.Draw(bg)
         bd.rounded_rectangle([0,0,size-1,size-1],radius=r,fill=(255,255,255,255))
         bg.alpha_composite(lg,((size-lg.width)//2,(size-lg.height)//2))

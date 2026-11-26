@@ -1,15 +1,13 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "date": "2026-11-26",
   "notes": [
-    "보고서 맨 뒤에 로우 데이터(실측값 전체) 표 추가",
-    "보고서를 엑셀(.xlsx)·이미지(PNG)로 저장",
-    "결재란 담당·검토·검토·검토·승인 5칸",
-    "여러 로트 한 번에 삭제, 측정값 한 칸씩 수정·삭제, 삭제 되돌리기, 방금 등록 취소"
+    "회사 로고 기본 탑재, 로고 테두리 제거, 로고 옆 회사명 중복 표시 제거",
+    "프로그램 아이콘을 회사 로고(H 마크)로 변경"
   ],
   "app": "app.html",
-  "app_sha256": "e15eac14cad3feb19f909edb2880b7c456120b52aa4ade4a741e82d43ee8ff8a",
-  "launcher": "1.1.0",
+  "app_sha256": "a749953a7ab448fc178020d732e782ec5805a8eb0869d71c3ccc186d786cb41c",
+  "launcher": "1.2.0",
   "exe": "release/HBS_Inspection.exe",
-  "exe_sha256": "950666a0646f5804d522a21993cd44d98a1db187e392b9529208664ea4bb9d40"
+  "exe_sha256": "5098dfde80cf976835cab57eaca00b0fef2ff8e77bc147ecadcf545d3128883c"
 }

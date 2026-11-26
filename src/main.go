@@ -41,7 +41,7 @@ var appIcon []byte
 const appID = "JINSPECT-1"
 
 // 실행 파일(런처) 버전. 저장소 version.json 의 launcher 값이 이보다 높으면 exe 를 새로 받는다.
-const launcherVersion = "1.1.0"
+const launcherVersion = "1.2.0"
 
 var (
 	dataDir   string
