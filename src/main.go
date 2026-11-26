@@ -41,7 +41,10 @@ var appIcon []byte
 const appID = "JINSPECT-1"
 
 // 실행 파일(런처) 버전. 저장소 version.json 의 launcher 값이 이보다 높으면 exe 를 새로 받는다.
-const launcherVersion = "1.2.0"
+const launcherVersion = "1.3.0"
+
+// 업데이트를 받아 오는 저장소 (관리자가 여기에 올리면 사용자 프로그램이 자동으로 받음)
+const updBase = "https://raw.githubusercontent.com/JJun-2/HBS/main/"
 
 var (
 	dataDir   string
@@ -58,7 +61,97 @@ var (
 	token      string
 	origin     string
 	exePending string
+	updatedTo  string
+	updNotes   string
 )
+
+type verInfo struct {
+	Version  string   `json:"version"`
+	Notes    []string `json:"notes"`
+	App      string   `json:"app"`
+	AppSha   string   `json:"app_sha256"`
+	Launcher string   `json:"launcher"`
+	Exe      string   `json:"exe"`
+	ExeSha   string   `json:"exe_sha256"`
+}
+
+func fetchURL(url string, timeout time.Duration, max int64) ([]byte, error) {
+	c := http.Client{Timeout: timeout}
+	resp, err := c.Get(url + "?t=" + strconv.FormatInt(time.Now().UnixNano(), 10))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+	return io.ReadAll(io.LimitReader(resp.Body, max))
+}
+
+func shaHex(b []byte) string {
+	s := sha256.Sum256(b)
+	return hex.EncodeToString(s[:])
+}
+
+// 프로그램을 켤 때 저장소에서 새 버전을 확인해 화면(app.html)을 먼저 바꿔 둔다.
+// 실행 파일 자체가 바뀐 경우는 뒤에서 받아 교체하고, 다음 실행부터 적용된다.
+func startupUpdate() {
+	b, err := fetchURL(updBase+"version.json", 4*time.Second, 1<<20)
+	if err != nil {
+		return
+	}
+	var v verInfo
+	if json.Unmarshal(b, &v) != nil || v.Version == "" {
+		return
+	}
+	htmlMu.RLock()
+	cur := curVersion
+	htmlMu.RUnlock()
+	if v.App != "" && verCmp(v.Version, cur) > 0 {
+		hb, err := fetchURL(updBase+v.App, 15*time.Second, 30<<20)
+		if err == nil && (v.AppSha == "" || shaHex(hb) == strings.ToLower(v.AppSha)) && htmlVersion(hb) == v.Version && bytes.Contains(hb, []byte("</html>")) {
+			os.MkdirAll(filepath.Dir(appCache), 0755)
+			if writeAtomic(appCache, hb) == nil {
+				htmlMu.Lock()
+				curHTML, curVersion = hb, v.Version
+				updatedTo, updNotes = v.Version, strings.Join(v.Notes, "\n")
+				htmlMu.Unlock()
+			}
+		}
+	}
+	if v.Exe != "" && v.Launcher != "" && verCmp(v.Launcher, launcherVersion) > 0 {
+		go func() {
+			eb, err := fetchURL(updBase+v.Exe, 5*time.Minute, 150<<20)
+			if err != nil || len(eb) < 1024 || eb[0] != 'M' || eb[1] != 'Z' {
+				return
+			}
+			if v.ExeSha != "" && shaHex(eb) != strings.ToLower(v.ExeSha) {
+				return
+			}
+			if replaceExe(eb) == nil {
+				exePending = v.Launcher
+			}
+		}()
+	}
+}
+
+func replaceExe(b []byte) error {
+	exe, _ := os.Executable()
+	nw, old := exe+".new", exe+".old"
+	if err := os.WriteFile(nw, b, 0755); err != nil {
+		return err
+	}
+	os.Remove(old)
+	if err := os.Rename(exe, old); err != nil {
+		os.Remove(nw)
+		return err
+	}
+	if err := os.Rename(nw, exe); err != nil {
+		os.Rename(old, exe)
+		return err
+	}
+	return nil
+}
 
 var verRe = regexp.MustCompile(`<meta name="app-version" content="([0-9.]+)"`)
 
@@ -164,20 +257,7 @@ func handleUpdateExe(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "실행 파일 검증 실패", 400)
 		return
 	}
-	exe, _ := os.Executable()
-	nw, old := exe+".new", exe+".old"
-	if err := os.WriteFile(nw, b, 0755); err != nil {
-		http.Error(w, "exe 폴더에 쓸 수 없습니다: "+err.Error(), 500)
-		return
-	}
-	os.Remove(old)
-	if err := os.Rename(exe, old); err != nil {
-		os.Remove(nw)
-		http.Error(w, "실행 파일 교체 실패: "+err.Error(), 500)
-		return
-	}
-	if err := os.Rename(nw, exe); err != nil {
-		os.Rename(old, exe)
+	if err := replaceExe(b); err != nil {
 		http.Error(w, "실행 파일 교체 실패: "+err.Error(), 500)
 		return
 	}
@@ -299,9 +379,9 @@ func handleInfo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	htmlMu.RLock()
 	v := curVersion
-	htmlMu.RUnlock()
+	defer htmlMu.RUnlock()
 	json.NewEncoder(w).Encode(map[string]string{"app": appID, "dataFile": dataFile, "backupDir": backupDir,
-		"launcher": launcherVersion, "appVersion": v, "exePending": exePending})
+		"launcher": launcherVersion, "appVersion": v, "exePending": exePending, "updatedTo": updatedTo, "updateNotes": updNotes})
 }
 
 func handlePing(w http.ResponseWriter, r *http.Request) {
@@ -433,6 +513,14 @@ func main() {
 	origin = fmt.Sprintf("http://127.0.0.1:%d", port)
 	srv := &http.Server{Handler: mux}
 	go srv.Serve(ln)
+
+	// 새 버전 확인 (인터넷이 안 되면 최대 몇 초 안에 건너뜀)
+	done := make(chan struct{})
+	go func() { startupUpdate(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(6 * time.Second):
+	}
 
 	url := fmt.Sprintf("http://127.0.0.1:%d/", port)
 	start := time.Now()

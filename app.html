@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="1.2.1">
+<meta name="app-version" content="1.3.0">
 <title>전수검사 데이터 분석 프로그램</title>
 <link rel="icon" href="/favicon.ico">
 <style>
@@ -170,6 +170,9 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
 .page .rawh{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 4px}
 .page .rawh h2{margin:0}
 .page .cap{font-size:9pt;color:#555;margin-bottom:8px}
+.page[contenteditable]:focus-within{outline:2px solid #9dc8f7;outline-offset:4px}
+.page [contenteditable]{outline:none}
+.page td:focus,.page th:focus,.page li:focus{background:#f7fbff}
 .editable{border:1px dashed transparent;border-radius:4px;padding:2px 4px;min-height:1.6em}
 .editable:hover{border-color:#9dc8f7}
 .editable:focus{outline:none;border-color:#257de0;background:#f7fbff}
@@ -268,15 +271,16 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
       <h2>2. 검사 정보</h2>
       <div class="row">
         <div class="field" style="min-width:240px"><label>품목</label><select id="mItem"></select></div>
-        <div class="field" style="min-width:280px;flex:1"><label>검사 제목</label><input type="text" id="mTitle" placeholder="예) OF051B 중량 전수검사"></div>
-        <div class="field"><label>검사일</label><input type="date" id="mDate"></div>
-        <div class="field"><label>검사자</label><input type="text" id="mInsp" style="width:110px"></div>
-        <div class="field"><label>라인/설비</label><input type="text" id="mLine" style="width:110px"></div>
+        <div class="field" style="min-width:280px;flex:1"><label>검사 제목</label><input type="text" id="mTitle" placeholder="예) OF051B 중량 전수검사" list="dlTitle" autocomplete="off"></div>
+        <div class="field"><label>시작일</label><input type="date" id="mDate"></div>
+        <div class="field"><label>종료일</label><input type="date" id="mDateEnd"></div>
+        <div class="field"><label>검사자</label><input type="text" id="mInsp" style="width:120px" list="dlInsp" autocomplete="off"></div>
+        <div class="field"><label>라인/설비</label><input type="text" id="mLine" style="width:110px" list="dlLine" autocomplete="off"></div>
       </div>
       <div class="newitem" id="mNewBox" style="display:none">
         <b class="small">새 품목 정보</b>
         <div class="row" style="margin-top:6px">
-          <div class="field"><label>품목명</label><input type="text" id="mnName" style="width:200px"></div>
+          <div class="field"><label>품목명</label><input type="text" id="mnName" style="width:200px" list="dlName" autocomplete="off"></div>
           <div class="field"><label>품번/코드</label><input type="text" id="mnCode" style="width:120px"></div>
           <div class="field"><label>측정 항목</label><input type="text" id="mnProp" style="width:100px" value="중량"></div>
           <div class="field"><label>단위</label><input type="text" id="mnUnit" style="width:70px" placeholder="g"></div>
@@ -337,15 +341,16 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
     <h2>3. 등록 정보</h2>
     <div class="row">
       <div class="field" style="min-width:240px"><label>품목</label><select id="rItem"></select></div>
-      <div class="field"><label>검사일</label><input type="date" id="rDate"></div>
-      <div class="field"><label>로트/배치 번호</label><input type="text" id="rLot" style="width:170px"></div>
-      <div class="field"><label>검사자</label><input type="text" id="rInsp" style="width:110px"></div>
-      <div class="field"><label>라인/설비</label><input type="text" id="rLine" style="width:110px"></div>
+      <div class="field"><label>시작일</label><input type="date" id="rDate"></div>
+      <div class="field"><label>종료일</label><input type="date" id="rDateEnd"></div>
+      <div class="field"><label>로트/배치 번호</label><input type="text" id="rLot" style="width:170px" autocomplete="off"></div>
+      <div class="field"><label>검사자</label><input type="text" id="rInsp" style="width:120px" list="dlInsp" autocomplete="off"></div>
+      <div class="field"><label>라인/설비</label><input type="text" id="rLine" style="width:110px" list="dlLine" autocomplete="off"></div>
     </div>
     <div class="newitem" id="newItemBox" style="display:none">
       <b class="small">새 품목 정보</b>
       <div class="row" style="margin-top:6px">
-        <div class="field"><label>품목명</label><input type="text" id="nName" style="width:200px"></div>
+        <div class="field"><label>품목명</label><input type="text" id="nName" style="width:200px" list="dlName" autocomplete="off"></div>
         <div class="field"><label>품번/코드</label><input type="text" id="nCode" style="width:120px"></div>
         <div class="field"><label>측정 항목</label><input type="text" id="nProp" style="width:100px" value="중량"></div>
         <div class="field"><label>단위</label><input type="text" id="nUnit" style="width:70px"></div>
@@ -354,7 +359,7 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
     <div class="row" style="margin-top:10px">
       <div class="field"><label>규격 하한 (LSL)</label><input type="number" step="any" id="rLsl" style="width:120px"></div>
       <div class="field"><label>규격 상한 (USL)</label><input type="number" step="any" id="rUsl" style="width:120px"></div>
-      <div class="field" style="flex:1;min-width:240px"><label>메모 (특이사항)</label><input type="text" id="rMemo"></div>
+      <div class="field" style="flex:1;min-width:240px"><label>메모 (특이사항)</label><input type="text" id="rMemo" list="dlMemo" autocomplete="off"></div>
     </div>
     <p class="hint">규격은 이 로트에 그대로 저장됩니다. 나중에 품목 규격이 바뀌어도 이미 등록한 로트의 판정은 바뀌지 않습니다. 한쪽 규격만 있으면 다른 쪽은 비워두세요.</p>
     <div class="row"><button class="btn primary" id="regBtn" style="padding:10px 26px;font-size:15px">데이터 등록</button><span id="regMsg" class="small"></span></div>
@@ -370,7 +375,7 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
       <div class="field"><label>시작일</label><input type="date" id="rpFrom"></div>
       <div class="field"><label>종료일</label><input type="date" id="rpTo"></div>
       <div class="field" style="min-width:280px"><label>보고서 제목</label><input type="text" id="rpTitle"></div>
-      <div class="field"><label>작성자</label><input type="text" id="rpAuthor" style="width:150px"></div>
+      <div class="field"><label>작성자</label><input type="text" id="rpAuthor" style="width:150px" list="dlAuthor" autocomplete="off"></div>
       <div class="field"><label>보고일</label><input type="date" id="rpDate"></div>
     </div>
     <div class="row" style="margin-top:8px">
@@ -391,9 +396,18 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
     <button class="btn" id="rpHtml">보고서 파일 다운로드 (HTML)</button>
     <button class="btn" id="rpCopyText">분석 내용 복사</button>
     <button class="btn" id="rpCopyTbl">요약표 복사 (엑셀 붙여넣기용)</button>
-    <span class="hint" style="align-self:center">점선 상자 안 문장은 클릭해서 바로 고칠 수 있습니다. PDF는 인쇄 창에서 대상 'PDF로 저장' 선택.</span>
   </div>
+  <div class="notice info small no-print" id="rpEditHint" style="display:none">미리보기 안의 <b>제목·문장·표·숫자 전부</b> 클릭해서 고칠 수 있습니다. 고친 내용이 그대로 인쇄 / PDF / 엑셀 / 이미지 / HTML에 들어갑니다. PDF는 [인쇄 / PDF 저장] → 대상 'PDF로 저장'.</div>
   <div id="reportArea"><div class="empty">조건을 고르고 [보고서 만들기]를 누르세요.</div></div>
+  <div class="rep-toolbar no-print" id="rpTools2" style="display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+    <button class="btn primary" data-dup="rpPrint">인쇄 / PDF 저장</button>
+    <button class="btn" data-dup="rpXlsx">엑셀로 저장</button>
+    <button class="btn" data-dup="rpPng">이미지 (한 장)</button>
+    <button class="btn" data-dup="rpPngPages">이미지 (쪽마다)</button>
+    <button class="btn" data-dup="rpHtml">HTML</button>
+    <button class="btn" id="rpRemake" style="margin-left:auto">고친 내용 버리고 다시 만들기</button>
+    <button class="btn danger" id="rpClear">보고서 내용 지우기</button>
+  </div>
 </section>
 
 <!-- ================= 데이터 관리 ================= -->
@@ -476,6 +490,7 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
 
 <footer class="app-foot"><span>전수검사 데이터 분석 프로그램 <span id="verInfo"></span> · <a id="updCheck">업데이트 확인</a> <span id="updState"></span></span><span>Made By <b>J</b></span></footer>
 <div class="modal-bg" id="modal"><div class="modal" id="modalBody"></div></div>
+<datalist id="dlInsp"></datalist><datalist id="dlLine"></datalist><datalist id="dlMemo"></datalist><datalist id="dlTitle"></datalist><datalist id="dlAuthor"></datalist><datalist id="dlName"></datalist>
 <div id="tip"></div>
 <div id="toast"></div>
 
@@ -581,8 +596,21 @@ function specText(lsl,usl,unit){
   if(usl!=null)return `${usl}${unit} 이하`;
   return '규격 없음';
 }
+const dEnd=l=>(l.dateEnd&&l.dateEnd>=l.date)?l.dateEnd:l.date;
+const dRange=l=>dEnd(l)!==l.date?`${l.date} ~ ${dEnd(l)}`:l.date;
+function periodOf(lots){if(!lots.length)return '';const a=lots.reduce((m,l)=>l.date<m?l.date:m,lots[0].date),b=lots.reduce((m,l)=>dEnd(l)>m?dEnd(l):m,dEnd(lots[0]));return a===b?a:`${a} ~ ${b}`;}
+// 입력 칸 추천 목록 (이전에 쓴 값을 마우스·방향키로 고를 수 있음)
+function fillSuggest(){
+  const uniq=(arr,n)=>{const m=new Map();for(let i=arr.length-1;i>=0;i--){const v=String(arr[i]||'').trim();if(v&&!m.has(v))m.set(v,1);if(m.size>=(n||30))break;}return [...m.keys()];};
+  const L=[...DB.lots].sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  const put=(id,vals)=>{const el=document.getElementById(id);if(el)el.innerHTML=vals.map(v=>`<option value="${esc(v)}"></option>`).join('');};
+  put('dlInsp',uniq(L.map(l=>l.inspector)));put('dlLine',uniq(L.map(l=>l.line)));put('dlMemo',uniq(L.map(l=>l.memo).concat(MD?MD.lots.map(l=>l.memo):[])));
+  put('dlTitle',uniq(L.map(l=>l.title)));put('dlAuthor',uniq([DB.meta.author].concat(L.map(l=>l.inspector))));put('dlName',uniq(DB.items.map(i=>i.name)));
+}
+let DASH_PRESET=null; // 등록 직후 대시보드에 그 기간을 걸어 둠
+function presetDash(itemId,from,to){DASH_PRESET={itemId,from,to};fillFilter();$('#fItem').value=itemId;$('#fFrom').value=from||'';$('#fTo').value=to||'';}
 function lotsOf(itemId,from,to){
-  return DB.lots.filter(l=>(!itemId||itemId==='__all'||l.itemId===itemId)&&(!from||l.date>=from)&&(!to||l.date<=to))
+  return DB.lots.filter(l=>(!itemId||itemId==='__all'||l.itemId===itemId)&&(!from||dEnd(l)>=from)&&(!to||l.date<=to))
     .sort((a,b)=>a.date===b.date?(a.createdAt||0)-(b.createdAt||0):a.date<b.date?-1:1);
 }
 
@@ -1072,7 +1100,7 @@ function renderDash(){
   const specs=new Set(lots.map(l=>specText(l.lsl,l.usl,'')));
   const kp=(k,v,dd,cls)=>`<div class="kpi ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${dd||''}</div></div>`;
   let html=`<div class="kpis">
-    ${kp('검사 수량',fint(st.n),`로트 ${lots.length}개 · ${lots[0].date}${lots.length>1?' ~ '+lots[lots.length-1].date:''}`)}
+    ${kp('검사 수량',fint(st.n),`로트 ${lots.length}개 · ${periodOf(lots)}`)}
     ${kp('합격',fint(st.pass),'규격 '+specText(st.lsl,st.usl,u))}
     ${kp('불합격',fint(st.fail),`상한 초과 ${fint(st.over)} · 하한 미달 ${fint(st.under)}`,st.fail?'bad':'good')}
     ${kp('합격률',pct(st.rate),it.targetRate?'목표 '+it.targetRate+'%':'',rateClass(st.rate,it.targetRate))}
@@ -1109,12 +1137,12 @@ function renderDash(){
   renderCharts();
 }
 function lotTableHtml(rows,d,u){
-  return `<table class="tbl"><thead><tr><th>검사일</th><th>로트</th><th>검사자</th><th>규격</th><th class="num">수량</th><th class="num">합격</th><th class="num">상한 초과</th><th class="num">하한 미달</th><th class="num">합격률</th><th class="num">평균</th><th class="num">표준편차</th><th class="num">최소</th><th class="num">최대</th><th class="num">Cpk</th><th class="no-print"></th></tr></thead><tbody>`+
-  rows.map(r=>`<tr><td>${r.lot.date}</td><td>${esc(r.lot.lotNo||'')}</td><td>${esc(r.lot.inspector||'')}</td><td>${specText(r.lot.lsl,r.lot.usl,u)}</td><td class="num">${fint(r.n)}</td><td class="num">${fint(r.pass)}</td><td class="num">${fint(r.over)}</td><td class="num">${fint(r.under)}</td><td class="num"><span class="badge ${rateClass(r.rate,r.it&&r.it.targetRate)}">${pct(r.rate)}</span></td><td class="num">${fmt(r.mean,d)}</td><td class="num">${fmt(r.sd,d+1)}</td><td class="num">${fmt(r.min,d)}</td><td class="num">${fmt(r.max,d)}</td><td class="num">${r.cpk!=null?r.cpk.toFixed(2):'-'}</td><td style="white-space:nowrap"><button class="btn sm" onclick="editValues('${r.lot.id}')">값 수정</button> <button class="btn sm danger" onclick="deleteLots(['${r.lot.id}'])">삭제</button></td></tr>`).join('')+`</tbody></table>`;
+  return `<table class="tbl"><thead><tr><th>검사 기간</th><th>로트</th><th>검사자</th><th>규격</th><th class="num">수량</th><th class="num">합격</th><th class="num">상한 초과</th><th class="num">하한 미달</th><th class="num">합격률</th><th class="num">평균</th><th class="num">표준편차</th><th class="num">최소</th><th class="num">최대</th><th class="num">Cpk</th><th class="no-print"></th></tr></thead><tbody>`+
+  rows.map(r=>`<tr><td>${dRange(r.lot)}</td><td>${esc(r.lot.lotNo||'')}</td><td>${esc(r.lot.inspector||'')}</td><td>${specText(r.lot.lsl,r.lot.usl,u)}</td><td class="num">${fint(r.n)}</td><td class="num">${fint(r.pass)}</td><td class="num">${fint(r.over)}</td><td class="num">${fint(r.under)}</td><td class="num"><span class="badge ${rateClass(r.rate,r.it&&r.it.targetRate)}">${pct(r.rate)}</span></td><td class="num">${fmt(r.mean,d)}</td><td class="num">${fmt(r.sd,d+1)}</td><td class="num">${fmt(r.min,d)}</td><td class="num">${fmt(r.max,d)}</td><td class="num">${r.cpk!=null?r.cpk.toFixed(2):'-'}</td><td style="white-space:nowrap"><button class="btn sm" onclick="editValues('${r.lot.id}')">값 수정</button> <button class="btn sm danger" onclick="deleteLots(['${r.lot.id}'])">삭제</button></td></tr>`).join('')+`</tbody></table>`;
 }
 function lotTSV(rows,d){
-  const h=['검사일','로트','검사자','규격하한','규격상한','수량','합격','상한초과','하한미달','합격률(%)','평균','표준편차','최소','최대','Cpk'];
-  return [h.join('\t')].concat(rows.map(r=>[r.lot.date,r.lot.lotNo||'',r.lot.inspector||'',r.lot.lsl??'',r.lot.usl??'',r.n,r.pass,r.over,r.under,r.rate.toFixed(2),r.mean.toFixed(d+1),r.sd.toFixed(d+2),r.min,r.max,r.cpk!=null?r.cpk.toFixed(3):''].join('\t'))).join('\n');
+  const h=['시작일','종료일','로트','검사자','규격하한','규격상한','수량','합격','상한초과','하한미달','합격률(%)','평균','표준편차','최소','최대','Cpk'];
+  return [h.join('\t')].concat(rows.map(r=>[r.lot.date,dEnd(r.lot),r.lot.lotNo||'',r.lot.inspector||'',r.lot.lsl??'',r.lot.usl??'',r.n,r.pass,r.over,r.under,r.rate.toFixed(2),r.mean.toFixed(d+1),r.sd.toFixed(d+2),r.min,r.max,r.cpk!=null?r.cpk.toFixed(3):''].join('\t'))).join('\n');
 }
 function renderAll(body,from,to){
   const lots=lotsOf('__all',from,to);if(!lots.length){body.innerHTML='<div class="card empty">선택한 기간에 데이터가 없습니다.</div>';return;}
@@ -1124,7 +1152,7 @@ function renderAll(body,from,to){
   // 일자별
   const byDate={};lots.forEach(l=>{const j=judgeCounts(l.values,l.lsl,l.usl);const o=byDate[l.date]=byDate[l.date]||{pass:0,over:0,under:0};o.pass+=j.pass;o.over+=j.over;o.under+=j.under;});
   const dates=Object.keys(byDate).sort();
-  let html=`<div class="kpis">${kp('검사 품목',per.length+'개')}${kp('검사 로트',lots.length+'개',`${lots[0].date} ~ ${lots[lots.length-1].date}`)}${kp('검사 수량',fint(n))}${kp('합격',fint(pass))}${kp('불합격',fint(over+under),`상한 초과 ${fint(over)} · 하한 미달 ${fint(under)}`,over+under?'bad':'good')}${kp('전체 합격률',pct(pass/n*100),'',rateClass(pass/n*100))}</div>`;
+  let html=`<div class="kpis">${kp('검사 품목',per.length+'개')}${kp('검사 로트',lots.length+'개',periodOf(lots))}${kp('검사 수량',fint(n))}${kp('합격',fint(pass))}${kp('불합격',fint(over+under),`상한 초과 ${fint(over)} · 하한 미달 ${fint(under)}`,over+under?'bad':'good')}${kp('전체 합격률',pct(pass/n*100),'',rateClass(pass/n*100))}</div>`;
   html+=`<div class="grid2">${chartCard('chItem','품목별 합격률','',280)}${chartCard('chDate','일자별 판정 수량 (전 품목)',`<div class="legend"><span><i style="background:${C.pass}"></i>합격</span><span><i style="background:${C.over}"></i>상한 초과</span><span><i style="background:${C.under}"></i>하한 미달</span></div>`,280)}</div>`;
   html+=`<div class="card"><h2>품목별 요약 <span class="tools"><button class="btn sm" id="cpItemTbl">표 복사</button></span></h2><div class="tblwrap"><table class="tbl"><thead><tr><th>품목</th><th>최근 규격</th><th class="num">로트</th><th class="num">수량</th><th class="num">합격</th><th class="num">불합격</th><th class="num">합격률</th><th class="num">평균</th><th class="num">Cpk</th><th>최근 검사일</th><th></th></tr></thead><tbody>`+
     per.map(p=>{const d=p.it.decimals!=null?p.it.decimals:2;return `<tr><td><b>${esc(itemLabel(p.it))}</b></td><td>${specText(p.s.lsl,p.s.usl,p.it.unit)}</td><td class="num">${p.ls.length}</td><td class="num">${fint(p.s.n)}</td><td class="num">${fint(p.s.pass)}</td><td class="num">${fint(p.s.fail)}</td><td class="num"><span class="badge ${rateClass(p.s.rate,p.it.targetRate)}">${pct(p.s.rate)}</span></td><td class="num">${fmt(p.s.mean,d)} ${esc(p.it.unit||'')}</td><td class="num">${p.s.cpk!=null?p.s.cpk.toFixed(2):'-'}</td><td>${p.ls[p.ls.length-1].date}</td><td><button class="btn sm" data-goitem="${p.it.id}">상세 보기</button></td></tr>`;}).join('')+`</tbody></table></div></div>`;
@@ -1167,7 +1195,7 @@ $('#p-input').addEventListener('drop',e=>{if(e.target.closest('#drop'))return;e.
 async function openFile(f){
   try{
     IN.fileName=f.name;IN.source='파일: '+f.name;
-    const dt0=dateFromName(f.name);if(dt0)$('#rDate').value=dt0;
+    const dt0=dateFromName(f.name);if(dt0){$('#rDate').value=dt0;$('#rDateEnd').value=dt0;}
     if(/\.(csv|txt)$/i.test(f.name)){IN.book=null;$('#sheetRow').style.display='none';setGrid(await readCsvFile(f));}
     else if(/\.xls$/i.test(f.name)){alert('구형 .xls 파일은 직접 읽을 수 없습니다.\n엑셀에서 [다른 이름으로 저장] → Excel 통합 문서(.xlsx)로 저장한 뒤 넣거나, 데이터를 복사·붙여넣기 하세요.');return;}
     else{
@@ -1241,7 +1269,7 @@ function onItemSel(fromUser){
 }
 $('#rItem').addEventListener('change',()=>onItemSel(true));
 function prefillReg(){
-  const det=IN.det;if(!$('#rDate').value)$('#rDate').value=today();
+  const det=IN.det;if(!$('#rDate').value)$('#rDate').value=today();if(!$('#rDateEnd').value||$('#rDateEnd').value<$('#rDate').value)$('#rDateEnd').value=$('#rDate').value;fillSuggest();
   // 기존 품목과 매칭
   let match=null;
   if(det.code||det.name){const key=(det.code||det.name).toLowerCase();match=DB.items.find(i=>(i.code&&i.code.toLowerCase()===key)||i.name.toLowerCase()===det.name.toLowerCase()||(i.code&&det.name.toLowerCase().indexOf(i.code.toLowerCase())>=0));}
@@ -1262,11 +1290,13 @@ function autoLot(){
   if(!$('#rLot').dataset.touched)$('#rLot').value=lot;
 }
 $('#rLot').addEventListener('input',()=>$('#rLot').dataset.touched='1');
-$('#rDate').addEventListener('change',autoLot);$('#nCode').addEventListener('input',autoLot);
+$('#rDate').addEventListener('change',()=>{const a=$('#rDate').value,b=$('#rDateEnd').value;if(a&&(!b||b<a))$('#rDateEnd').value=a;autoLot();});
+$('#rDateEnd').addEventListener('change',()=>{const a=$('#rDate').value,b=$('#rDateEnd').value;if(a&&b&&b<a){alert('종료일이 시작일보다 빠릅니다.');$('#rDateEnd').value=a;}});$('#nCode').addEventListener('input',autoLot);
 $('#regBtn').onclick=()=>{
   const vals=currentValues();if(!vals.length){alert('인식된 측정값이 없습니다. 범위를 확인하세요.');return;}
   const sp=curSpec();if(sp.lsl!=null&&sp.usl!=null&&sp.lsl>sp.usl){alert('규격 하한이 상한보다 큽니다.');return;}
-  const date=$('#rDate').value;if(!date){alert('검사일을 입력하세요.');return;}
+  const date=$('#rDate').value;if(!date){alert('시작일을 입력하세요.');return;}
+  const dateEnd=($('#rDateEnd').value&&$('#rDateEnd').value>=date)?$('#rDateEnd').value:date;
   let itemId=$('#rItem').value;
   if(itemId==='__new'){
     const name=$('#nName').value.trim();if(!name){alert('새 품목명을 입력하세요.');return;}
@@ -1276,14 +1306,15 @@ $('#regBtn').onclick=()=>{
   const sum=vals.reduce((a,b)=>a+b,0);
   const dup=DB.lots.find(l=>l.itemId===itemId&&l.values.length===vals.length&&Math.abs(l.values.reduce((a,b)=>a+b,0)-sum)<1e-6);
   if(dup&&!confirm(`같은 품목에 측정값 개수와 합계가 똑같은 로트가 이미 있습니다.\n(${dup.date} ${dup.lotNo||''})\n\n그래도 등록할까요?`))return;
-  const lot={id:uid(),itemId,date,lotNo:$('#rLot').value.trim(),inspector:$('#rInsp').value.trim(),line:$('#rLine').value.trim(),memo:$('#rMemo').value.trim(),
+  const lot={id:uid(),itemId,date,dateEnd,lotNo:$('#rLot').value.trim(),inspector:$('#rInsp').value.trim(),line:$('#rLine').value.trim(),memo:$('#rMemo').value.trim(),
     lsl:sp.lsl,usl:sp.usl,values:vals,source:IN.source,createdAt:Date.now()};
   DB.lots.push(lot);DB.meta.lastChange=Date.now();
   if(!save()){DB.lots.pop();return;}
   const j=judgeCounts(vals,sp.lsl,sp.usl);
   $('#regMsg').innerHTML=`<b style="color:var(--good)">등록 완료</b> — ${fint(vals.length)}개, 합격률 ${pct(j.pass/vals.length*100)} &nbsp;<button class="btn sm primary" id="goDash">대시보드에서 보기</button> <button class="btn sm danger" id="undoReg">방금 등록 취소</button>`;
   $('#undoReg').onclick=()=>{if(deleteLots([lot.id]))$('#regMsg').innerHTML='<span class="muted">등록을 취소했습니다.</span>';};
-  $('#goDash').onclick=()=>{$('#fItem').value=itemId;fillFilter();$('#fItem').value=itemId;runLotSel=lot.id;showTab('dash');};
+  presetDash(itemId,date,dateEnd);runLotSel='__all';fillSuggest();
+  $('#goDash').onclick=()=>{presetDash(itemId,date,dateEnd);runLotSel='__all';showTab('dash');};
   $('#rLot').dataset.touched='';$('#rMemo').value='';fillItemSel();$('#rItem').value=itemId;onItemSel(false);
   toast('등록했습니다');refreshHeader();
 };
@@ -1292,7 +1323,7 @@ $('#regBtn').onclick=()=>{
    직접 입력 (표)
    ========================================================= */
 let MD=null;
-function mDefault(){return {item:'',title:'',date:today(),insp:'',line:'',lsl:'',usl:'',nName:'',nCode:'',nProp:'중량',nUnit:'',
+function mDefault(){return {item:'',title:'',date:today(),dateEnd:today(),insp:'',line:'',lsl:'',usl:'',nName:'',nCode:'',nProp:'중량',nUnit:'',
   lots:[{name:'',qty:100,cols:10,rows:10,memo:'',vals:[]}],built:true};}
 function mNorm(l){if(!(l.cols>0))l.cols=10;if(l.qty==null)l.qty=(l.rows||0)*l.cols;l.qty=Math.max(0,Math.min(20000,parseInt(l.qty)||0));l.rows=Math.max(1,Math.ceil(l.qty/l.cols));}
 function mItemCode(){
@@ -1304,13 +1335,14 @@ let mSaveT;
 function mSave(){DB.meta.draft=MD;clearTimeout(mSaveT);mSaveT=setTimeout(()=>{save();$('#mSaved').textContent='임시 저장됨 '+new Date().toLocaleTimeString('ko-KR');},1200);}
 function mSpec(){const a=String(MD.lsl).trim(),b=String(MD.usl).trim();return {lsl:a===''?null:+a,usl:b===''?null:+b};}
 function mInit(){
-  if(!MD){MD=DB.meta.draft||mDefault();if(!MD.lots||!MD.lots.length)MD.lots=mDefault().lots;MD.built=true;}
+  if(!MD){MD=DB.meta.draft||mDefault();if(!MD.lots||!MD.lots.length)MD.lots=mDefault().lots;MD.built=true;if(!MD.dateEnd)MD.dateEnd=MD.date;}
+  fillSuggest();
   MD.lots.forEach(mNorm);
   const sel=$('#mItem');
   sel.innerHTML=DB.items.map(i=>`<option value="${i.id}">${esc(itemLabel(i))}</option>`).join('')+`<option value="__new">+ 새 품목 만들기</option>`;
   if(!MD.item||(MD.item!=='__new'&&!itemById(MD.item))){MD.item=DB.items.length?DB.items[0].id:'__new';const it=itemById(MD.item);if(it){MD.lsl=it.lsl??'';MD.usl=it.usl??'';}}
   sel.value=MD.item;
-  const map={mTitle:'title',mDate:'date',mInsp:'insp',mLine:'line',mLsl:'lsl',mUsl:'usl',mnName:'nName',mnCode:'nCode',mnProp:'nProp',mnUnit:'nUnit'};
+  const map={mTitle:'title',mDate:'date',mDateEnd:'dateEnd',mInsp:'insp',mLine:'line',mLsl:'lsl',mUsl:'usl',mnName:'nName',mnCode:'nCode',mnProp:'nProp',mnUnit:'nUnit'};
   for(const id in map)$('#'+id).value=MD[map[id]]??'';
   $('#mNewBox').style.display=MD.item==='__new'?'':'none';
   if(!MD.title)$('#mTitle').placeholder=mDefTitle();
@@ -1319,9 +1351,10 @@ function mInit(){
 }
 function mDefTitle(){let it=MD.item!=='__new'?itemById(MD.item):null;const code=it?(it.code||it.name):(MD.nCode||MD.nName||'');const prop=it?(it.prop||''):(MD.nProp||'');return `${code} ${prop} 전수검사`.replace(/\s+/g,' ').trim();}
 (function(){
-  const map={mTitle:'title',mDate:'date',mInsp:'insp',mLine:'line',mLsl:'lsl',mUsl:'usl',mnName:'nName',mnCode:'nCode',mnProp:'nProp',mnUnit:'nUnit'};
+  const map={mTitle:'title',mDate:'date',mDateEnd:'dateEnd',mInsp:'insp',mLine:'line',mLsl:'lsl',mUsl:'usl',mnName:'nName',mnCode:'nCode',mnProp:'nProp',mnUnit:'nUnit'};
   for(const id in map)$('#'+id).addEventListener('input',()=>{MD[map[id]]=$('#'+id).value;mSave();
     if(id==='mLsl'||id==='mUsl'){mRecolorAll();}
+    if(id==='mDate'&&(!MD.dateEnd||MD.dateEnd<MD.date)){MD.dateEnd=MD.date;$('#mDateEnd').value=MD.date;}
     if(['mDate','mnCode','mnName'].includes(id))mRenderCfg();
     if(['mnCode','mnName','mnProp'].includes(id))$('#mTitle').placeholder=mDefTitle();});
   $('#mItem').addEventListener('change',()=>{MD.item=$('#mItem').value;$('#mNewBox').style.display=MD.item==='__new'?'':'none';
@@ -1336,7 +1369,7 @@ function mRenderCfg(){
     <td><input type="number" min="1" max="20000" data-k="qty" data-i="${i}" value="${l.qty}" style="font-weight:700;font-size:15px"></td>
     <td><input type="number" min="1" max="50" data-k="cols" data-i="${i}" value="${l.cols}"></td>
     <td class="tot" id="mTot${i}">${mShape(l)}</td>
-    <td><input type="text" data-k="memo" data-i="${i}" value="${esc(l.memo||'')}" placeholder="예) 2호기, 속도 12m/min"></td>
+    <td><input type="text" data-k="memo" data-i="${i}" value="${esc(l.memo||'')}" placeholder="예) 2호기, 속도 12m/min" list="dlMemo" autocomplete="off"></td>
     <td><button class="btn sm danger" data-mdel="${i}" ${MD.lots.length<2?'disabled':''}>삭제</button></td></tr>`;}).join('')+
     `<tr style="background:#f7f8fa"><td colspan="2" style="text-align:right;font-weight:700">합계 (${MD.lots.length}개 로트)</td><td class="tot" id="mTotAll">${fint(tot)}개</td><td colspan="4"></td></tr>`;
 }
@@ -1445,7 +1478,9 @@ $('#mGrids').addEventListener('click',e=>{
 $('#mClear').onclick=()=>{if(!confirm('모든 로트의 입력값을 지울까요? (입력 구성은 그대로 둡니다)'))return;MD.lots.forEach(l=>l.vals=[]);mBuildGrids();};
 $('#mReg').onclick=()=>{
   const sp=mSpec();if(sp.lsl!=null&&sp.usl!=null&&sp.lsl>sp.usl){alert('규격 하한이 상한보다 큽니다.');return;}
-  if(!MD.date){alert('검사일을 입력하세요.');return;}
+  if(!MD.date){alert('시작일을 입력하세요.');return;}
+  if(MD.dateEnd&&MD.dateEnd<MD.date){alert('종료일이 시작일보다 빠릅니다.');return;}
+  const dateEnd=MD.dateEnd&&MD.dateEnd>=MD.date?MD.dateEnd:MD.date;
   if(MD.item==='__new'&&!String(MD.nName||'').trim()){alert('새 품목명을 입력하세요.');return;}
   let bad=0;const pack=[];const partial=[];
   MD.lots.forEach((l,i)=>{const nums=[];let filled=0;l.vals.forEach((row,r)=>row.forEach((v,c)=>{if(r*l.cols+c>=l.qty||v===''||v==null)return;filled++;const n=numOf(v);if(n==null)bad++;else nums.push(n);}));
@@ -1456,14 +1491,15 @@ $('#mReg').onclick=()=>{
   let itemId=MD.item;
   if(itemId==='__new'){const all=[].concat(...pack.map(p=>p.nums));const it={id:uid(),name:MD.nName.trim(),code:(MD.nCode||'').trim(),prop:(MD.nProp||'').trim(),unit:(MD.nUnit||'').trim(),lsl:sp.lsl,usl:sp.usl,decimals:decOf(all),targetRate:null,memo:'',createdAt:Date.now()};DB.items.push(it);itemId=it.id;}
   const title=(MD.title||'').trim()||mDefTitle();let total=0,pass=0;
-  pack.forEach(p=>{const l=MD.lots[p.i];DB.lots.push({id:uid(),itemId,date:MD.date,lotNo:mLotName(p.i),inspector:(MD.insp||'').trim(),line:(MD.line||'').trim(),memo:(l.memo||'').trim(),title,
+  pack.forEach(p=>{const l=MD.lots[p.i];DB.lots.push({id:uid(),itemId,date:MD.date,dateEnd,lotNo:mLotName(p.i),inspector:(MD.insp||'').trim(),line:(MD.line||'').trim(),memo:(l.memo||'').trim(),title,
     lsl:sp.lsl,usl:sp.usl,values:p.nums,source:'직접 입력',createdAt:Date.now()+p.i});total+=p.nums.length;pass+=judgeCounts(p.nums,sp.lsl,sp.usl).pass;});
   MD.item=itemId;MD.lots.forEach(l=>l.vals=[]);DB.meta.lastChange=Date.now();DB.meta.draft=MD;save();
   mInit();refreshHeader();
   const newIds=DB.lots.slice(-pack.length).map(l=>l.id);
   $('#mRegMsg').innerHTML=`<b style="color:var(--good)">등록 완료</b> — 로트 ${pack.length}개, ${fint(total)}개, 합격률 ${pct(pass/total*100)} &nbsp;<button class="btn sm primary" id="mGoDash">대시보드에서 보기</button> <button class="btn sm danger" id="mUndoReg">방금 등록 취소</button>`;
   $('#mUndoReg').onclick=()=>{if(deleteLots(newIds))$('#mRegMsg').innerHTML='<span class="muted">등록을 취소했습니다.</span>';};
-  $('#mGoDash').onclick=()=>{fillFilter();$('#fItem').value=itemId;runLotSel='__all';showTab('dash');};
+  presetDash(itemId,MD.date,dateEnd);fillSuggest();
+  $('#mGoDash').onclick=()=>{presetDash(itemId,MD.date,dateEnd);runLotSel='__all';showTab('dash');};
   toast('등록했습니다');
 };
 
@@ -1481,11 +1517,13 @@ function initReport(){
 }
 ['#rpItem','#rpFrom','#rpTo'].forEach(s=>$(s).addEventListener('change',()=>{$('#rpTitle').dataset.touched='';rpLots();}));
 $('#rpTitle').addEventListener('input',()=>$('#rpTitle').dataset.touched='1');
+$('#rpTitle').setAttribute('list','dlTitle');$('#rpTitle').setAttribute('autocomplete','off');
 function rpLots(){
   const it=itemById($('#rpItem').value);const box=$('#rpLots');if(!it){box.innerHTML='<span class="muted">등록된 품목이 없습니다.</span>';return;}
   const lots=lotsOf(it.id,$('#rpFrom').value,$('#rpTo').value);
   if(!$('#rpTitle').dataset.touched){const tt=[...new Set(lots.map(l=>l.title).filter(Boolean))];$('#rpTitle').value=tt.length===1?tt[0]+' 결과 보고':`${it.code||it.name} ${it.prop||''} 전수검사 결과 보고`.replace(/\s+/g,' ');}
-  box.innerHTML=lots.length?`<div class="small" style="margin-bottom:4px"><b>포함할 로트</b> <a href="#" id="rpAllOn">전체 선택</a> · <a href="#" id="rpAllOff">전체 해제</a></div><div style="display:flex;flex-wrap:wrap;gap:6px 16px">`+lots.map(l=>`<label class="small"><input type="checkbox" class="rpL" value="${l.id}" checked> ${l.date} ${esc(l.lotNo||'')} (${fint(l.values.length)}개)</label>`).join('')+'</div>':'<span class="muted">해당 기간에 로트가 없습니다.</span>';
+  fillSuggest();
+  box.innerHTML=lots.length?`<div class="small" style="margin-bottom:4px"><b>포함할 로트</b> <a href="#" id="rpAllOn">전체 선택</a> · <a href="#" id="rpAllOff">전체 해제</a></div><div style="display:flex;flex-wrap:wrap;gap:6px 16px">`+lots.map(l=>`<label class="small"><input type="checkbox" class="rpL" value="${l.id}" checked> ${dRange(l)} ${esc(l.lotNo||'')} (${fint(l.values.length)}개)</label>`).join('')+'</div>':'<span class="muted">해당 기간에 로트가 없습니다.</span>';
   if(lots.length){$('#rpAllOn').onclick=e=>{e.preventDefault();$$('.rpL').forEach(c=>c.checked=true);};$('#rpAllOff').onclick=e=>{e.preventDefault();$$('.rpL').forEach(c=>c.checked=false);};}
 }
 let REP=null;
@@ -1498,7 +1536,7 @@ function makeReport(){
   if((DB.meta.author||'')!==$('#rpAuthor').value){DB.meta.author=$('#rpAuthor').value;save();}
   const excl=$('#rpExcl').checked;const u=it.unit||'',d=it.decimals!=null?it.decimals:2;
   const st=calc(lots,{excl,lsl:lots[lots.length-1].lsl,usl:lots[lots.length-1].usl});const A=analyze(st,lots,it,excl);const rows=lotRows(lots,d);
-  const period=lots[0].date===lots[lots.length-1].date?lots[0].date:`${lots[0].date} ~ ${lots[lots.length-1].date}`;
+  const period=periodOf(lots);
   const insp=[...new Set(lots.map(l=>l.inspector).filter(Boolean))].join(', ');
   const W=720;
   const imgH=chartImg((cv,o)=>drawHist(cv,st,{...o,unit:u,dec:d}),W,270);
@@ -1508,8 +1546,8 @@ function makeReport(){
   const imgS=lots.length>1?chartImg((cv,o)=>drawStack(cv,rows.map(r=>r.label),[{name:'합격',color:C.pass,values:rows.map(r=>r.pass)},{name:'상한 초과',color:C.over,values:rows.map(r=>r.over)},{name:'하한 미달',color:C.under,values:rows.map(r=>r.under)}],{...o,rot}),W,240):null;
   const imgL=lots.length>1?chartImg((cv,o)=>drawLotRange(cv,rows,{...o,lsl:st.lsl,usl:st.usl,dec:d,unit:u,rot}),W,240):null;
   const lgd=`<span style="color:${C.pass}">■</span> 합격 &nbsp;<span style="color:${C.over}">■</span> 상한 초과 &nbsp;<span style="color:${C.under}">■</span> 하한 미달 &nbsp;- - 규격선`;
-  const LOTTBL=`<table><tr><th>검사일</th><th>로트</th><th>수량</th><th>합격</th><th>상한 초과</th><th>하한 미달</th><th>합격률</th><th>평균</th><th>표준편차</th><th>최소</th><th>최대</th></tr>`+
-      rows.map(r=>`<tr><td>${r.lot.date}</td><td>${esc(r.lot.lotNo||'')}</td><td class="num">${fint(r.n)}</td><td class="num">${fint(r.pass)}</td><td class="num">${fint(r.over)}</td><td class="num">${fint(r.under)}</td><td class="num">${pct(r.rate)}</td><td class="num">${fmt(r.mean,d)}</td><td class="num">${fmt(r.sd,d+1)}</td><td class="num">${fmt(r.min,d)}</td><td class="num">${fmt(r.max,d)}</td></tr>`).join('')+
+  const LOTTBL=`<table><tr><th>검사 기간</th><th>로트</th><th>수량</th><th>합격</th><th>상한 초과</th><th>하한 미달</th><th>합격률</th><th>평균</th><th>표준편차</th><th>최소</th><th>최대</th></tr>`+
+      rows.map(r=>`<tr><td>${dRange(r.lot)}</td><td>${esc(r.lot.lotNo||'')}</td><td class="num">${fint(r.n)}</td><td class="num">${fint(r.pass)}</td><td class="num">${fint(r.over)}</td><td class="num">${fint(r.under)}</td><td class="num">${pct(r.rate)}</td><td class="num">${fmt(r.mean,d)}</td><td class="num">${fmt(r.sd,d+1)}</td><td class="num">${fmt(r.min,d)}</td><td class="num">${fmt(r.max,d)}</td></tr>`).join('')+
       (rows.length>1?`<tr style="font-weight:700;background:#f7f8fa"><td colspan="2">합계</td><td class="num">${fint(st.n)}</td><td class="num">${fint(st.pass)}</td><td class="num">${fint(st.over)}</td><td class="num">${fint(st.under)}</td><td class="num">${pct(st.rate)}</td><td class="num">${fmt(st.mean,d)}</td><td class="num">${fmt(st.sd,d+1)}</td><td class="num">${fmt(st.allMin,d)}</td><td class="num">${fmt(st.allMax,d)}</td></tr>`:'')+`</table>`
       ;
   const rk=(k,v,cls)=>`<div class="rkpi ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div></div>`;
@@ -1562,13 +1600,16 @@ function makeReport(){
             const cls=(l.usl!=null&&x>l.usl)?'o':(l.lsl!=null&&x<l.lsl)?'u':'';t+=`<td class="${cls}">${fmt(x,d)}</td>`;}
           t+='</tr>';}
         t+='</table>';
-        pRaw+=`<div class="page">${pg===0?`<div class="rawh"><h2>${first?'부록. ':''}로우 데이터 — ${esc(l.date)} ${esc(l.lotNo||'')}</h2><span class="cap">${fint(v.length)}개 · 규격 ${specText(l.lsl,l.usl,u)} · <span style="color:#c8302f">■</span> 상한 초과 <span style="color:#9a6200">■</span> 하한 미달</span></div>`:`<div class="rawh"><span class="cap"><b>로우 데이터 — ${esc(l.date)} ${esc(l.lotNo||'')} (계속 ${pg+1}/${pages})</b></span></div>`}${t}</div>`;
+        pRaw+=`<div class="page">${pg===0?`<div class="rawh"><h2>${first?'부록. ':''}로우 데이터 — ${esc(dRange(l))} ${esc(l.lotNo||'')}</h2><span class="cap">${fint(v.length)}개 · 규격 ${specText(l.lsl,l.usl,u)} · <span style="color:#c8302f">■</span> 상한 초과 <span style="color:#9a6200">■</span> 하한 미달</span></div>`:`<div class="rawh"><span class="cap"><b>로우 데이터 — ${esc(dRange(l))} ${esc(l.lotNo||'')} (계속 ${pg+1}/${pages})</b></span></div>`}${t}</div>`;
         first=false;
       }
     });
   }
-  $('#reportArea').innerHTML=p1+p2+p3+pRaw;$('#rpTools').style.display='';
+  $('#reportArea').innerHTML=p1+p2+p3+pRaw;$('#rpTools').style.display='';$('#rpTools2').style.display='';$('#rpEditHint').style.display='';
+  $$('#reportArea .page').forEach(pg=>{pg.setAttribute('contenteditable','true');pg.setAttribute('spellcheck','false');});
+  $$('#reportArea .page [contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));
   REP={it,st,A,rows,d,u,lots,title:$('#rpTitle').value,period,imgs:[imgH,imgR,imgS,imgL].filter(Boolean),insp};
+  repDraftSave();
   $('#rpTools').scrollIntoView({behavior:'smooth'});
 }
 function defaultAction(st,it){
@@ -1578,12 +1619,21 @@ function defaultAction(st,it){
   if(st.rate<95)return '불량 발생 구간의 공정 조건 확인 및 산포 저감 방안 검토';
   return '현 조건 유지, 정기 전수검사로 추이 관리';
 }
-$('#rpPrint').onclick=()=>window.print();
-$('#rpCopyText').onclick=()=>{if(!REP)return;const v=$('#reportArea .verdict').innerText;const a=$('#repAna').innerText;const c=$('#repAct').innerText;
-  copyText(`[${REP.title}]\n검사 기간: ${REP.period}\n${v}\n\n■ 분석\n${a.split('\n').filter(x=>x.trim()).map(x=>'- '+x.trim()).join('\n')}\n\n■ 향후 조치\n${c.split('\n').filter(x=>x.trim()).map(x=>'- '+x.trim()).join('\n')}`);};
+$('#rpPrint').onclick=()=>{document.activeElement&&document.activeElement.blur();window.print();};
+$$('[data-dup]').forEach(b=>b.onclick=()=>$('#'+b.dataset.dup).click());
+let repT;
+function repDraftSave(){clearTimeout(repT);repT=setTimeout(()=>{try{sessionStorage.setItem('insp_rep',JSON.stringify({html:$('#reportArea').innerHTML,title:REP&&REP.title}));}catch(e){}},800);}
+$('#reportArea').addEventListener('input',repDraftSave);
+$('#rpClear').onclick=()=>{if(!confirm('보고서 미리보기 내용을 모두 지울까요?\n(검사 데이터는 지워지지 않습니다)'))return;
+  $('#reportArea').innerHTML='<div class="empty">조건을 고르고 [보고서 만들기]를 누르세요.</div>';REP=null;
+  $('#rpTools').style.display='none';$('#rpTools2').style.display='none';$('#rpEditHint').style.display='none';try{sessionStorage.removeItem('insp_rep');}catch(e){}
+  window.scrollTo(0,0);toast('보고서 내용을 지웠습니다');};
+$('#rpRemake').onclick=()=>{if(confirm('직접 고친 내용을 버리고 처음 상태로 다시 만들까요?'))makeReport();};
+$('#rpCopyText').onclick=()=>{if(!REP)return;const v=($('#reportArea .verdict')||{innerText:''}).innerText;const a=$('#repAna').innerText;const c=$('#repAct').innerText;
+  const h1=$('#reportArea h1');copyText(`[${h1?h1.innerText.trim():REP.title}]\n검사 기간: ${REP.period}\n${v}\n\n■ 분석\n${a.split('\n').filter(x=>x.trim()).map(x=>'- '+x.trim()).join('\n')}\n\n■ 향후 조치\n${c.split('\n').filter(x=>x.trim()).map(x=>'- '+x.trim()).join('\n')}`);};
 $('#rpCopyTbl').onclick=()=>{if(!REP)return;const s=REP.st;copyText(`구분\t값\n검사 수량\t${s.n}\n합격\t${s.pass}\n상한 초과\t${s.over}\n하한 미달\t${s.under}\n합격률(%)\t${s.rate.toFixed(2)}\n평균\t${s.mean.toFixed(REP.d+1)}\n표준편차\t${s.sd.toFixed(REP.d+2)}\n최소\t${s.allMin}\n최대\t${s.allMax}\nCpk\t${s.cpk!=null?s.cpk.toFixed(3):''}\n\n`+lotTSV(REP.rows,REP.d));};
 function reportCSS(){return [...document.styleSheets[0].cssRules].map(r=>r.cssText).filter(t=>/^(\.page|\.rk|\.verdict|\.sign|\.editable|\.rhead|\.rlogo|@media print|@page)/.test(t)).join('\n');}
-function repFile(ext){return `${REP.title.replace(/[\\/:*?"<>|]/g,'_')}_${today()}.${ext}`;}
+function repFile(ext){const h=$('#reportArea h1');const t=(h&&h.innerText.trim())||REP.title;return `${t.replace(/[\\/:*?"<>|]/g,'_')}_${today()}.${ext}`;}
 $('#rpHtml').onclick=()=>{
   if(!REP)return;const css=reportCSS();
   const body=$('#reportArea').innerHTML.replace(/ contenteditable="true"/g,'');
@@ -1669,59 +1719,58 @@ function buildXlsx(sheets){ // [{name,rows,opt,images:[{png:Uint8Array,row,col,w
 function dataUrlBytes(u){const b=atob(u.split(',')[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
 function imgSize(u){return new Promise(r=>{const im=new Image();im.onload=()=>r({w:im.naturalWidth,h:im.naturalHeight});im.onerror=()=>r({w:1440,h:540});im.src=u;});}
 function linesOf(el){if(!el)return [];const li=[...el.querySelectorAll('li')].map(x=>x.innerText.trim()).filter(Boolean);return li.length?li:el.innerText.split('\n').map(x=>x.trim()).filter(Boolean);}
+// 엑셀: 미리보기에 보이는 최종 내용(직접 고친 것 포함)을 그대로 옮긴다
+function cellVal(t){t=String(t).replace(/ /g,' ').trim();const n=t.replace(/,/g,'');return /^-?\d+(\.\d+)?$/.test(n)&&n.length<16?parseFloat(n):t;}
+function tableRows(tb,hdrStyle){const out=[];tb.querySelectorAll('tr').forEach(tr=>{const row=[];tr.querySelectorAll('th,td').forEach(c=>{const v=cellVal(c.innerText);
+  const st=c.tagName==='TH'?1:c.classList.contains('o')?4:c.classList.contains('u')?5:0;const span=+(c.getAttribute('colspan')||1);row.push(st?{v,s:st}:v);for(let k=1;k<span;k++)row.push('');});out.push(row);});return out;}
+async function domSheet(pages){
+  const rows=[],images=[];
+  const walk=async el=>{
+    for(const n of el.children){
+      if(n.matches('.sign'))continue;
+      if(n.matches('h1')){rows.push([{v:n.innerText.trim(),s:2}]);continue;}
+      if(n.matches('h2')){rows.push([]);rows.push([{v:n.innerText.trim(),s:7}]);continue;}
+      if(n.matches('.rlogo')){const im=n.querySelector('img');if(!im){rows.push([{v:n.innerText.trim(),s:3}]);}continue;}
+      if(n.matches('.rmeta,.cap,p')){const t=n.innerText.replace(/\s+/g,' ').trim();if(t)rows.push([t]);continue;}
+      if(n.matches('.verdict')){rows.push([{v:n.innerText.trim(),s:3}]);continue;}
+      if(n.matches('.rkpis')){const k=[...n.querySelectorAll('.rkpi')];rows.push(k.map(x=>({v:(x.querySelector('.k')||x).innerText.trim(),s:1})));rows.push(k.map(x=>cellVal((x.querySelector('.v')||x).innerText)));continue;}
+      if(n.matches('table')){tableRows(n).forEach(r=>rows.push(r));continue;}
+      if(n.matches('ul,ol')){n.querySelectorAll('li').forEach(li=>{const t=li.innerText.trim();if(t)rows.push(['· '+t]);});continue;}
+      if(n.matches('img')){const sz=await imgSize(n.src);const w=760,h=Math.round(sz.h*w/sz.w);images.push({png:dataUrlBytes(n.src),row:rows.length,col:0,w,h});const k=Math.ceil(h/20)+1;for(let i=0;i<k;i++)rows.push([]);continue;}
+      if(n.children.length){await walk(n);continue;}
+      const t=n.innerText&&n.innerText.trim();if(t)rows.push([t]);
+    }
+  };
+  for(const pg of pages){await walk(pg);rows.push([]);}
+  return {rows,images};
+}
 $('#rpXlsx').onclick=async()=>{
-  if(!REP)return;const R=REP,s=R.st,d=R.d,u=R.u||'';const H=v=>({v,s:1}),B=v=>({v,s:3}),SUB=v=>({v,s:7});
-  const title=($('#reportArea h1')||{}).innerText||R.title;
-  // 1) 보고서 시트
-  const rows=[];
-  rows.push([{v:title,s:2}]);
-  rows.push([`${DB.meta.company||''}   보고일 ${$('#rpDate').value}   작성 ${$('#rpAuthor').value||'-'}   검사 기간 ${R.period}`]);
-  rows.push([]);
-  rows.push([SUB('1. 검사 개요')]);
-  rows.push([H('품목'),itemLabel(R.it),H('측정 항목'),`${R.it.prop||'-'} (${u||'-'})`]);
-  rows.push([H('규격'),specText(s.lsl,s.usl,u),H('검사 방식'),'전수검사']);
-  rows.push([H('검사 로트'),R.lots.length+'개',H('검사자'),R.insp||'-']);
-  rows.push([]);
-  rows.push([SUB('2. 검사 결과')]);
-  rows.push([H('검사 수량'),H('합격'),H('상한 초과'),H('하한 미달'),H('합격률(%)'),H('평균'),H('표준편차'),H('최소'),H('최대'),H('Cpk')]);
-  rows.push([s.n,s.pass,s.over,s.under,+s.rate.toFixed(2),+s.mean.toFixed(d+1),+s.sd.toFixed(d+2),s.allMin,s.allMax,s.cpk!=null?+s.cpk.toFixed(3):'-']);
-  rows.push([]);
-  rows.push([SUB('3. 분석 및 판정')]);
-  rows.push([B(($('#reportArea .verdict')||{}).innerText||R.A.verdict)]);
-  linesOf($('#repAna')).forEach(t=>rows.push(['· '+t]));
-  rows.push([]);
-  rows.push([SUB('4. 향후 조치')]);
-  linesOf($('#repAct')).forEach(t=>rows.push(['· '+t]));
-  rows.push([]);
-  rows.push([SUB('5. 그래프')]);
-  const images=[];let at=rows.length;
-  for(const url of R.imgs){const sz=await imgSize(url);const w=760,h=Math.round(sz.h*w/sz.w);images.push({png:dataUrlBytes(url),row:at,col:0,w,h});at+=Math.ceil(h/20)+1;}
-  // 2) 로트별 상세
-  const lot=[[H('검사일'),H('로트'),H('검사자'),H('규격 하한'),H('규격 상한'),H('수량'),H('합격'),H('상한 초과'),H('하한 미달'),H('합격률(%)'),H('평균'),H('표준편차'),H('최소'),H('최대'),H('Cpk'),H('메모')]];
-  R.rows.forEach(r=>lot.push([r.lot.date,r.lot.lotNo||'',r.lot.inspector||'',r.lot.lsl??'',r.lot.usl??'',r.n,r.pass,r.over,r.under,+r.rate.toFixed(2),+r.mean.toFixed(d+1),+r.sd.toFixed(d+2),r.min,r.max,r.cpk!=null?+r.cpk.toFixed(3):'',r.lot.memo||'']));
-  if(R.rows.length>1)lot.push([B('합계'),'','','','',B(s.n),B(s.pass),B(s.over),B(s.under),B(+s.rate.toFixed(2)),+s.mean.toFixed(d+1),+s.sd.toFixed(d+2),s.allMin,s.allMax,'','']);
-  // 3) 로우 데이터 (표 모양: 한 줄 10개)  4) 로우 데이터 (목록)
-  const grid=[];const list=[[H('검사일'),H('로트'),H('순번'),H('측정값'),H('판정')]];
-  R.lots.forEach((l,li)=>{
-    if(li)grid.push([]);
-    grid.push([B(`${l.date} ${l.lotNo||''}  (${l.values.length}개, 규격 ${specText(l.lsl,l.usl,u)})`)]);
-    grid.push([H('번호'),...Array.from({length:10},(_,c)=>H(c+1))]);
-    for(let r=0;r*10<l.values.length;r++){const row=[`${r*10+1}~${Math.min(l.values.length,(r+1)*10)}`];
-      for(let c=0;c<10;c++){const k=r*10+c;if(k>=l.values.length)break;const x=l.values[k];row.push((l.usl!=null&&x>l.usl)?{v:x,s:4}:(l.lsl!=null&&x<l.lsl)?{v:x,s:5}:x);}grid.push(row);}
-    l.values.forEach((x,k)=>{const j=(l.usl!=null&&x>l.usl)?'상한 초과':(l.lsl!=null&&x<l.lsl)?'하한 미달':'합격';list.push([l.date,l.lotNo||'',k+1,j==='합격'?x:{v:x,s:j==='상한 초과'?4:5},j]);});
-  });
-  const blob=buildXlsx([
-    {name:'보고서',rows,opt:{cols:[14,26,14,26,12,12,12,12,12,10]},images},
-    {name:'로트별 상세',rows:lot,opt:{freeze:1,cols:[12,18,10,10,10,9,9,10,10,11,10,10,9,9,8,24]}},
-    {name:'로우 데이터(표)',rows:grid,opt:{cols:[13,9,9,9,9,9,9,9,9,9,9]}},
-    {name:'로우 데이터(목록)',rows:list,opt:{freeze:1,cols:[12,18,8,11,11]}},
-  ]);
-  download(repFile('xlsx'),blob);toast('엑셀 파일을 저장했습니다');
+  if(!REP)return;
+  try{
+    const pages=[...document.querySelectorAll('#reportArea .page')];const main=pages.filter(p=>!p.querySelector('table.raw'));const raw=pages.filter(p=>p.querySelector('table.raw'));
+    const top=await domSheet(main);
+    const lco=DB.meta.company||'';if(lco&&main[0]&&main[0].querySelector('.rlogo img'))top.rows.splice(1,0,[lco]);
+    const sheets=[{name:'보고서',rows:top.rows,opt:{cols:[16,24,16,24,13,13,12,12,12,12,12]},images:top.images}];
+    // 로트별 상세: 미리보기의 '로트별 상세' 표
+    const h2s=[...document.querySelectorAll('#reportArea h2')].filter(h=>/로트별 상세/.test(h.innerText));
+    let lotTb=null;for(const h of h2s){let x=h.nextElementSibling;while(x&&x.tagName!=='TABLE'&&x.tagName!=='H2')x=x.nextElementSibling;if(x&&x.tagName==='TABLE'){lotTb=x;break;}}
+    if(lotTb)sheets.push({name:'로트별 상세',rows:tableRows(lotTb),opt:{freeze:1,cols:[22,18,9,9,10,10,10,10,10,10,10]}});
+    // 로우 데이터: 미리보기의 로우 데이터 표 (고친 값 그대로)
+    if(raw.length){
+      const grid=[],list=[[{v:'로트',s:1},{v:'순번',s:1},{v:'측정값',s:1},{v:'판정',s:1}]];let title='';
+      raw.forEach(pg=>{const h=pg.querySelector('.rawh h2');if(h){title=h.innerText.replace(/^부록\.\s*/,'').replace(/^로우 데이터 —\s*/,'').trim();if(grid.length)grid.push([]);grid.push([{v:h.innerText.trim(),s:3}]);const c=pg.querySelector('.rawh .cap');if(c)grid.push([c.innerText.trim()]);}
+        const trs=[...pg.querySelectorAll('table.raw tr')];trs.forEach((tr,i)=>{if(i===0&&!h)return;const cells=[...tr.children];grid.push(cells.map(c=>{const v=cellVal(c.innerText);const st=c.tagName==='TH'?1:c.classList.contains('o')?4:c.classList.contains('u')?5:0;return st?{v,s:st}:v;}));
+          if(i>0){const start=parseInt(String(cells[0].innerText).replace(/,/g,''))||0;cells.slice(1).forEach((c,k)=>{const v=cellVal(c.innerText);if(v===''||typeof v!=='number')return;const j=c.classList.contains('o')?'상한 초과':c.classList.contains('u')?'하한 미달':'합격';list.push([title,start+k,j==='합격'?v:{v,s:j==='상한 초과'?4:5},j]);});}});});
+      sheets.push({name:'로우 데이터(표)',rows:grid,opt:{cols:[14,9,9,9,9,9,9,9,9,9,9]}});
+      sheets.push({name:'로우 데이터(목록)',rows:list,opt:{freeze:1,cols:[34,8,11,11]}});
+    }
+    download(repFile('xlsx'),buildXlsx(sheets));toast('엑셀 파일을 저장했습니다 (미리보기 내용 그대로)');
+  }catch(e){console.error(e);alert('엑셀 저장 실패: '+e.message);}
 };
 // 보고서 쪽을 그림으로: SVG foreignObject 로 그려 캔버스에 옮김
 async function pageCanvas(pg,scale){
   const w=pg.offsetWidth,h=pg.offsetHeight;const cl=pg.cloneNode(true);
-  cl.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));
+  cl.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));cl.removeAttribute('contenteditable');
   cl.style.margin='0';cl.style.boxShadow='none';cl.style.width=w+'px';cl.style.minHeight=h+'px';
   const xhtml=new XMLSerializer().serializeToString(cl);
   const css=reportCSS().replace(/@media print\{[\s\S]*?\}\s*\}/g,'');
@@ -1768,9 +1817,9 @@ function renderData(){
     $('#storeInfo').innerHTML=`저장 사용량 약 ${(used/1024/1024).toFixed(2)}MB / 브라우저 한도 약 5MB · 마지막 백업: ${DB.meta.lastBackup?new Date(DB.meta.lastBackup).toLocaleString('ko-KR'):'없음'}`;
   }
   if(!lots.length){$('#lotTable').innerHTML='<div class="empty">등록된 로트가 없습니다.</div>';return;}
-  $('#lotTable').innerHTML=`<table class="tbl"><thead><tr><th style="width:30px"><input type="checkbox" id="dmAll" title="전체 선택"></th><th>검사일</th><th>품목</th><th>로트</th><th>검사자</th><th>라인</th><th>규격</th><th class="num">수량</th><th class="num">합격률</th><th>입력</th><th>메모</th><th></th></tr></thead><tbody>`+
+  $('#lotTable').innerHTML=`<table class="tbl"><thead><tr><th style="width:30px"><input type="checkbox" id="dmAll" title="전체 선택"></th><th>검사 기간</th><th>품목</th><th>로트</th><th>검사자</th><th>라인</th><th>규격</th><th class="num">수량</th><th class="num">합격률</th><th>입력</th><th>메모</th><th></th></tr></thead><tbody>`+
     lots.map(l=>{const it=itemById(l.itemId);const j=judgeCounts(l.values,l.lsl,l.usl);const r=j.pass/l.values.length*100;
-      return `<tr><td><input type="checkbox" class="dmChk" value="${l.id}"></td><td>${l.date}</td><td>${esc(itemLabel(it))}</td><td>${esc(l.lotNo||'')}</td><td>${esc(l.inspector||'')}</td><td>${esc(l.line||'')}</td><td>${specText(l.lsl,l.usl,it&&it.unit)}</td><td class="num">${fint(l.values.length)}</td><td class="num"><span class="badge ${rateClass(r,it&&it.targetRate)}">${pct(r)}</span></td><td class="small muted">${esc(l.source||'')}</td><td class="small">${esc(l.memo||'')}</td>
+      return `<tr><td><input type="checkbox" class="dmChk" value="${l.id}"></td><td>${dRange(l)}</td><td>${esc(itemLabel(it))}</td><td>${esc(l.lotNo||'')}</td><td>${esc(l.inspector||'')}</td><td>${esc(l.line||'')}</td><td>${specText(l.lsl,l.usl,it&&it.unit)}</td><td class="num">${fint(l.values.length)}</td><td class="num"><span class="badge ${rateClass(r,it&&it.targetRate)}">${pct(r)}</span></td><td class="small muted">${esc(l.source||'')}</td><td class="small">${esc(l.memo||'')}</td>
       <td style="white-space:nowrap"><button class="btn sm" data-view="${l.id}">보기</button> <button class="btn sm" data-edit="${l.id}">정보 수정</button> <button class="btn sm" data-vedit="${l.id}">값 수정</button> <button class="btn sm" data-cpv="${l.id}">값 복사</button> <button class="btn sm danger" data-del="${l.id}">삭제</button></td></tr>`;}).join('')+'</tbody></table>';
 }
 $('#dmItem').addEventListener('change',renderData);
@@ -1841,7 +1890,7 @@ $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();}
 function editLot(id){
   const l=DB.lots.find(x=>x.id===id);
   openModal(`<h2>로트 정보 수정</h2>
-  <div class="row"><div class="field"><label>품목</label><select id="eItem">${DB.items.map(i=>`<option value="${i.id}" ${i.id===l.itemId?'selected':''}>${esc(itemLabel(i))}</option>`).join('')}</select></div><div class="field"><label>검사일</label><input type="date" id="eDate" value="${l.date}"></div></div>
+  <div class="row"><div class="field"><label>품목</label><select id="eItem">${DB.items.map(i=>`<option value="${i.id}" ${i.id===l.itemId?'selected':''}>${esc(itemLabel(i))}</option>`).join('')}</select></div><div class="field"><label>시작일</label><input type="date" id="eDate" value="${l.date}"></div><div class="field"><label>종료일</label><input type="date" id="eDateEnd" value="${dEnd(l)}"></div></div>
   <div class="row"><div class="field"><label>로트 번호</label><input type="text" id="eLot" value="${esc(l.lotNo||'')}"></div><div class="field"><label>검사자</label><input type="text" id="eInsp" value="${esc(l.inspector||'')}"></div><div class="field"><label>라인/설비</label><input type="text" id="eLine" value="${esc(l.line||'')}"></div></div>
   <div class="row"><div class="field"><label>규격 하한</label><input type="number" step="any" id="eLsl" value="${l.lsl??''}"></div><div class="field"><label>규격 상한</label><input type="number" step="any" id="eUsl" value="${l.usl??''}"></div></div>
   <div class="field" style="margin-bottom:12px"><label>메모</label><input type="text" id="eMemo" value="${esc(l.memo||'')}"></div>
@@ -1849,7 +1898,8 @@ function editLot(id){
   <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">취소</button><button class="btn primary" id="eSave">저장</button></div>`);
   $('#eSave').onclick=()=>{
     const a=$('#eLsl').value.trim(),b=$('#eUsl').value.trim();
-    Object.assign(l,{itemId:$('#eItem').value,date:$('#eDate').value,lotNo:$('#eLot').value.trim(),inspector:$('#eInsp').value.trim(),line:$('#eLine').value.trim(),memo:$('#eMemo').value.trim(),lsl:a===''?null:+a,usl:b===''?null:+b});
+    if($('#eDateEnd').value&&$('#eDateEnd').value<$('#eDate').value){alert('종료일이 시작일보다 빠릅니다.');return;}
+    Object.assign(l,{itemId:$('#eItem').value,date:$('#eDate').value,dateEnd:$('#eDateEnd').value||$('#eDate').value,lotNo:$('#eLot').value.trim(),inspector:$('#eInsp').value.trim(),line:$('#eLine').value.trim(),memo:$('#eMemo').value.trim(),lsl:a===''?null:+a,usl:b===''?null:+b});
     DB.meta.lastChange=Date.now();save();closeModal();renderData();toast('저장했습니다');};
 }
 function doBackup(){
@@ -1870,14 +1920,14 @@ $('#bkFile').addEventListener('change',async e=>{
   }catch(err){alert('불러오기 실패: '+err.message);}
 });
 $('#csvRaw').onclick=()=>{
-  const lines=['품목,품번,검사일,로트,검사자,라인,규격하한,규격상한,순번,측정값,판정'];
+  const lines=['품목,품번,시작일,종료일,로트,검사자,라인,규격하한,규격상한,순번,측정값,판정'];
   for(const l of lotsOf(null)){const it=itemById(l.itemId)||{};l.values.forEach((v,i)=>{const j=(l.usl!=null&&v>l.usl)?'상한초과':(l.lsl!=null&&v<l.lsl)?'하한미달':'합격';
-    lines.push([it.name,it.code,l.date,l.lotNo,l.inspector,l.line,l.lsl??'',l.usl??'',i+1,v,j].map(x=>`"${String(x??'').replace(/"/g,'""')}"`).join(','));});}
+    lines.push([it.name,it.code,l.date,dEnd(l),l.lotNo,l.inspector,l.line,l.lsl??'',l.usl??'',i+1,v,j].map(x=>`"${String(x??'').replace(/"/g,'""')}"`).join(','));});}
   download(`측정값전체_${today()}.csv`,'﻿'+lines.join('\r\n'),'text/csv;charset=utf-8');
 };
 function lotSummaryTSV(){
-  const h=['품목','품번','검사일','로트','검사자','라인','규격하한','규격상한','수량','합격','상한초과','하한미달','합격률(%)','평균','표준편차','최소','최대','Cpk','메모'];
-  return [h.join('\t')].concat(lotsOf(null).map(l=>{const it=itemById(l.itemId)||{};const s=calc([l]);return [it.name,it.code||'',l.date,l.lotNo||'',l.inspector||'',l.line||'',l.lsl??'',l.usl??'',s.n,s.pass,s.over,s.under,s.rate.toFixed(2),s.mean.toFixed(4),s.sd.toFixed(4),s.allMin,s.allMax,s.cpk!=null?s.cpk.toFixed(3):'',l.memo||''].join('\t');})).join('\n');
+  const h=['품목','품번','시작일','종료일','로트','검사자','라인','규격하한','규격상한','수량','합격','상한초과','하한미달','합격률(%)','평균','표준편차','최소','최대','Cpk','메모'];
+  return [h.join('\t')].concat(lotsOf(null).map(l=>{const it=itemById(l.itemId)||{};const s=calc([l]);return [it.name,it.code||'',l.date,dEnd(l),l.lotNo||'',l.inspector||'',l.line||'',l.lsl??'',l.usl??'',s.n,s.pass,s.over,s.under,s.rate.toFixed(2),s.mean.toFixed(4),s.sd.toFixed(4),s.allMin,s.allMax,s.cpk!=null?s.cpk.toFixed(3):'',l.memo||''].join('\t');})).join('\n');
 }
 $('#csvLot').onclick=()=>download(`로트요약_${today()}.csv`,'﻿'+lotSummaryTSV().split('\n').map(r=>r.split('\t').map(x=>`"${x.replace(/"/g,'""')}"`).join(',')).join('\r\n'),'text/csv;charset=utf-8');
 $('#copyLot').onclick=()=>copyText(lotSummaryTSV());
@@ -1951,7 +2001,7 @@ function updState(t){$('#updState').textContent=t?'· '+t:'';}
 function notesHtml(n){return Array.isArray(n)&&n.length?'<ul>'+n.slice(0,6).map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>':'';}
 function banner(html,err){$('#updBanner').innerHTML=`<div class="upd no-print${err?' err':''}">${html}<button class="btn sm" style="margin-left:auto" onclick="this.parentElement.remove()">닫기</button></div>`;}
 let updBusy=false;
-async function checkUpdate(manual){
+async function checkUpdate(manual,atStart){
   if(updBusy)return;updBusy=true;updState('업데이트 확인 중…');
   try{
     let v;
@@ -1981,6 +2031,8 @@ async function checkUpdate(manual){
       SERVER.exePending=v.launcher;did.push('exe');
     }
     if(verCmp(SERVER.appVersion||APP_VER,APP_VER)>0&&!did.includes('app'))did.push('app'); // 다른 창에서 이미 받은 경우
+    if(did.includes('app')&&atStart&&!document.querySelector('#reportArea .page')){ // 켜자마자 받은 경우: 바로 적용
+      updState('새 버전 적용 중…');applyUpdate();return;}
     if(did.length){
       updState('새 버전 준비됨');
       const btn=did.includes('app')?`<button class="btn sm primary" onclick="applyUpdate()">지금 적용 (화면 새로고침)</button>`:'';
@@ -1999,7 +2051,9 @@ $('#updCheck').onclick=()=>checkUpdate(true);$('#updCheck2').onclick=()=>checkUp
   if(SERVER){setInterval(()=>fetch('/api/ping').catch(()=>{}),20000);fetch('/api/ping').catch(()=>{});}
   $('#rDate').value=today();
   renderDash();
-  setTimeout(()=>checkUpdate(false),1500);
+  if(SERVER&&SERVER.updatedTo)setTimeout(()=>banner(`<div><b>v${esc(SERVER.updatedTo)}으로 자동 업데이트되었습니다.</b>${notesHtml(SERVER.updateNotes?SERVER.updateNotes.split('\n'):[])}</div>`),300);
+  setTimeout(()=>checkUpdate(false,true),1500);
+  setInterval(()=>checkUpdate(false),60*60*1000); // 켜 둔 동안 1시간마다 확인
 })();
 </script>
 </body>
