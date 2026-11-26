@@ -41,10 +41,38 @@ var appIcon []byte
 const appID = "JINSPECT-1"
 
 // 실행 파일(런처) 버전. 저장소 version.json 의 launcher 값이 이보다 높으면 exe 를 새로 받는다.
-const launcherVersion = "1.3.0"
+const launcherVersion = "1.4.0"
 
-// 업데이트를 받아 오는 저장소 (관리자가 여기에 올리면 사용자 프로그램이 자동으로 받음)
-const updBase = "https://raw.githubusercontent.com/JJun-2/HBS/main/"
+// 업데이트를 받아 오는 곳: 저장소 JJun-2/HBS 안의 '전수검사분석' 폴더
+// (관리자가 여기에 올리면 사용자 프로그램이 켤 때 자동으로 받음. 배포용 설정에서 바꿀 수 있음)
+const updDefault = "https://raw.githubusercontent.com/JJun-2/HBS/main/%EC%A0%84%EC%88%98%EA%B2%80%EC%82%AC%EB%B6%84%EC%84%9D/"
+
+// 데이터 파일의 설정(배포용 설정)에서 업데이트 주소와 사용 여부를 읽는다
+func updSettings() (string, bool) {
+	base, auto := updDefault, true
+	b, err := os.ReadFile(dataFile)
+	if err != nil {
+		return base, auto
+	}
+	var d struct {
+		Meta struct {
+			Settings map[string]interface{} `json:"settings"`
+		} `json:"meta"`
+	}
+	if json.Unmarshal(b, &d) != nil {
+		return base, auto
+	}
+	if v, ok := d.Meta.Settings["updBase"].(string); ok && strings.HasPrefix(v, "https://") {
+		if !strings.HasSuffix(v, "/") {
+			v += "/"
+		}
+		base = v
+	}
+	if v, ok := d.Meta.Settings["autoUpdate"].(bool); ok {
+		auto = v
+	}
+	return base, auto
+}
 
 var (
 	dataDir   string
@@ -96,6 +124,10 @@ func shaHex(b []byte) string {
 // 프로그램을 켤 때 저장소에서 새 버전을 확인해 화면(app.html)을 먼저 바꿔 둔다.
 // 실행 파일 자체가 바뀐 경우는 뒤에서 받아 교체하고, 다음 실행부터 적용된다.
 func startupUpdate() {
+	updBase, auto := updSettings()
+	if !auto {
+		return
+	}
 	b, err := fetchURL(updBase+"version.json", 4*time.Second, 1<<20)
 	if err != nil {
 		return
