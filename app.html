@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="app-version" content="1.1.0">
+<meta name="app-version" content="1.2.0">
 <title>전수검사 데이터 분석 프로그램</title>
 <link rel="icon" href="/favicon.ico">
 <style>
@@ -103,6 +103,7 @@ table.tbl tr:hover td{background:#fafbfc}
 .notice.warn{background:#fff7e6;border:1px solid #f3d595}
 .empty{padding:40px;text-align:center;color:var(--text2)}
 #tip{position:fixed;pointer-events:none;background:rgba(25,25,25,.92);color:#fff;font-size:12.5px;padding:6px 9px;border-radius:6px;z-index:999;display:none;white-space:nowrap;line-height:1.45}
+#toast button{vertical-align:middle}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16263d;color:#fff;padding:10px 20px;border-radius:8px;z-index:1000;display:none;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2)}
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:500}
 .modal-bg.on{display:flex}
@@ -160,6 +161,14 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
 .rkpi .v{font-size:13.5pt;font-weight:700;white-space:nowrap}
 .rkpi.bad .v{color:#c8302f}.rkpi.good .v{color:#0a7d32}.rkpi.warn .v{color:#b26b00}
 .page img{width:100%;display:block;margin:4px 0 2px;border:1px solid #e3e6ea}
+.page table.raw{font-size:7.6pt;table-layout:fixed}
+.page table.raw th,.page table.raw td{padding:1px 4px;line-height:1.25}
+.page table.raw td{text-align:right;font-variant-numeric:tabular-nums}
+.page table.raw td.ri{text-align:center;background:#f6f7f9;color:#555}
+.page table.raw td.o{color:#c8302f;font-weight:700;background:#fdeeee}
+.page table.raw td.u{color:#9a6200;font-weight:700;background:#fff4dc}
+.page .rawh{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 4px}
+.page .rawh h2{margin:0}
 .page .cap{font-size:9pt;color:#555;margin-bottom:8px}
 .editable{border:1px dashed transparent;border-radius:4px;padding:2px 4px;min-height:1.6em}
 .editable:hover{border-color:#9dc8f7}
@@ -172,7 +181,7 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
 .verdict.warn{border-color:#b26b00;color:#b26b00;background:#fffaf0}
 .sign{display:flex;justify-content:flex-end}
 .sign table{width:auto}
-.sign td,.sign th{width:22mm;text-align:center;font-size:9.5pt}
+.sign td,.sign th{width:17mm;text-align:center;font-size:9pt;padding:3px 2px}
 .sign td{height:13mm}
 @media print{
   @page{size:A4;margin:0}
@@ -306,7 +315,7 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
   </div>
 
   <div class="card" id="parseCard" style="display:none">
-    <h2>2. 인식 결과 확인 <span class="tools"><button class="btn sm" id="copyVals">인식된 측정값 복사</button></span></h2>
+    <h2>2. 인식 결과 확인 <span class="tools"><button class="btn sm" id="copyVals">인식된 측정값 복사</button><button class="btn sm danger" id="clearIn">불러온 데이터 지우기</button></span></h2>
     <div class="grid2">
       <div>
         <div class="detect" id="detectBox"></div>
@@ -366,15 +375,19 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
     </div>
     <div class="row" style="margin-top:8px">
       <label class="small"><input type="checkbox" id="rpLogo" checked> 회사 로고·회사명 넣기</label>
-      <label class="small"><input type="checkbox" id="rpSign" checked> 결재란 넣기</label>
+      <label class="small"><input type="checkbox" id="rpSign" checked> 결재란 넣기 (담당·검토·검토·검토·승인)</label>
       <label class="small"><input type="checkbox" id="rpExcl"> 극단값은 평균·표준편차에서 제외</label>
       <label class="small"><input type="checkbox" id="rpLotTbl" checked> 로트별 상세표 넣기</label>
+      <label class="small"><input type="checkbox" id="rpRaw" checked> 맨 뒤에 로우 데이터(실측값 전체) 넣기</label>
     </div>
     <div id="rpLots" style="margin-top:10px"></div>
     <div class="row" style="margin-top:10px"><button class="btn primary" id="rpMake">보고서 만들기</button></div>
   </div>
   <div class="rep-toolbar no-print" id="rpTools" style="display:none">
     <button class="btn primary" id="rpPrint">인쇄 / PDF 저장</button>
+    <button class="btn" id="rpXlsx">엑셀로 저장 (.xlsx)</button>
+    <button class="btn" id="rpPng">이미지로 저장 (PNG 한 장)</button>
+    <button class="btn" id="rpPngPages">이미지로 저장 (쪽마다)</button>
     <button class="btn" id="rpHtml">보고서 파일 다운로드 (HTML)</button>
     <button class="btn" id="rpCopyText">분석 내용 복사</button>
     <button class="btn" id="rpCopyTbl">요약표 복사 (엑셀 붙여넣기용)</button>
@@ -414,7 +427,8 @@ table.mgrid td.no{font-size:11px;color:var(--text3)}
     <p class="small muted" id="storeInfo" style="margin:10px 0 0"></p>
   </div>
   <div class="card">
-    <h2>등록된 검사 로트 <span class="tools"><select id="dmItem"></select></span></h2>
+    <h2>등록된 검사 로트 <span class="tools"><select id="dmItem"></select><button class="btn sm danger" id="dmDelSel" disabled>선택한 로트 삭제</button></span></h2>
+    <p class="hint" style="margin:-4px 0 8px">왼쪽 칸을 체크해 여러 로트를 한 번에 지울 수 있습니다. [값 수정]에서는 측정값을 한 칸씩 고치거나 지울 수 있습니다.</p>
     <div class="tblwrap" id="lotTable"></div>
   </div>
 </section>
@@ -1092,8 +1106,8 @@ function renderDash(){
   renderCharts();
 }
 function lotTableHtml(rows,d,u){
-  return `<table class="tbl"><thead><tr><th>검사일</th><th>로트</th><th>검사자</th><th>규격</th><th class="num">수량</th><th class="num">합격</th><th class="num">상한 초과</th><th class="num">하한 미달</th><th class="num">합격률</th><th class="num">평균</th><th class="num">표준편차</th><th class="num">최소</th><th class="num">최대</th><th class="num">Cpk</th></tr></thead><tbody>`+
-  rows.map(r=>`<tr><td>${r.lot.date}</td><td>${esc(r.lot.lotNo||'')}</td><td>${esc(r.lot.inspector||'')}</td><td>${specText(r.lot.lsl,r.lot.usl,u)}</td><td class="num">${fint(r.n)}</td><td class="num">${fint(r.pass)}</td><td class="num">${fint(r.over)}</td><td class="num">${fint(r.under)}</td><td class="num"><span class="badge ${rateClass(r.rate,r.it&&r.it.targetRate)}">${pct(r.rate)}</span></td><td class="num">${fmt(r.mean,d)}</td><td class="num">${fmt(r.sd,d+1)}</td><td class="num">${fmt(r.min,d)}</td><td class="num">${fmt(r.max,d)}</td><td class="num">${r.cpk!=null?r.cpk.toFixed(2):'-'}</td></tr>`).join('')+`</tbody></table>`;
+  return `<table class="tbl"><thead><tr><th>검사일</th><th>로트</th><th>검사자</th><th>규격</th><th class="num">수량</th><th class="num">합격</th><th class="num">상한 초과</th><th class="num">하한 미달</th><th class="num">합격률</th><th class="num">평균</th><th class="num">표준편차</th><th class="num">최소</th><th class="num">최대</th><th class="num">Cpk</th><th class="no-print"></th></tr></thead><tbody>`+
+  rows.map(r=>`<tr><td>${r.lot.date}</td><td>${esc(r.lot.lotNo||'')}</td><td>${esc(r.lot.inspector||'')}</td><td>${specText(r.lot.lsl,r.lot.usl,u)}</td><td class="num">${fint(r.n)}</td><td class="num">${fint(r.pass)}</td><td class="num">${fint(r.over)}</td><td class="num">${fint(r.under)}</td><td class="num"><span class="badge ${rateClass(r.rate,r.it&&r.it.targetRate)}">${pct(r.rate)}</span></td><td class="num">${fmt(r.mean,d)}</td><td class="num">${fmt(r.sd,d+1)}</td><td class="num">${fmt(r.min,d)}</td><td class="num">${fmt(r.max,d)}</td><td class="num">${r.cpk!=null?r.cpk.toFixed(2):'-'}</td><td style="white-space:nowrap"><button class="btn sm" onclick="editValues('${r.lot.id}')">값 수정</button> <button class="btn sm danger" onclick="deleteLots(['${r.lot.id}'])">삭제</button></td></tr>`).join('')+`</tbody></table>`;
 }
 function lotTSV(rows,d){
   const h=['검사일','로트','검사자','규격하한','규격상한','수량','합격','상한초과','하한미달','합격률(%)','평균','표준편차','최소','최대','Cpk'];
@@ -1209,6 +1223,8 @@ function updateParse(){
   $('#previewBox').innerHTML=t;
 }
 $('#copyVals').onclick=()=>{const v=currentValues();copyText(v.join('\n'));};
+$('#clearIn').onclick=()=>{IN={grid:null,det:null,source:'',fileName:'',book:null};$('#pasteBox').value='';$('#sheetRow').style.display='none';$('#fileName').textContent='';
+  $('#parseCard').style.display='none';$('#regCard').style.display='none';$('#regMsg').innerHTML='';toast('불러온 데이터를 지웠습니다 (등록된 데이터는 그대로입니다)');};
 function fillItemSel(){
   const sel=$('#rItem');const cur=sel.value;
   sel.innerHTML=DB.items.map(i=>`<option value="${i.id}">${esc(itemLabel(i))}</option>`).join('')+`<option value="__new">+ 새 품목 만들기</option>`;
@@ -1262,7 +1278,8 @@ $('#regBtn').onclick=()=>{
   DB.lots.push(lot);DB.meta.lastChange=Date.now();
   if(!save()){DB.lots.pop();return;}
   const j=judgeCounts(vals,sp.lsl,sp.usl);
-  $('#regMsg').innerHTML=`<b style="color:var(--good)">등록 완료</b> — ${fint(vals.length)}개, 합격률 ${pct(j.pass/vals.length*100)} &nbsp;<button class="btn sm primary" id="goDash">대시보드에서 보기</button>`;
+  $('#regMsg').innerHTML=`<b style="color:var(--good)">등록 완료</b> — ${fint(vals.length)}개, 합격률 ${pct(j.pass/vals.length*100)} &nbsp;<button class="btn sm primary" id="goDash">대시보드에서 보기</button> <button class="btn sm danger" id="undoReg">방금 등록 취소</button>`;
+  $('#undoReg').onclick=()=>{if(deleteLots([lot.id]))$('#regMsg').innerHTML='<span class="muted">등록을 취소했습니다.</span>';};
   $('#goDash').onclick=()=>{$('#fItem').value=itemId;fillFilter();$('#fItem').value=itemId;runLotSel=lot.id;showTab('dash');};
   $('#rLot').dataset.touched='';$('#rMemo').value='';fillItemSel();$('#rItem').value=itemId;onItemSel(false);
   toast('등록했습니다');refreshHeader();
@@ -1395,6 +1412,7 @@ $('#mGrids').addEventListener('keydown',e=>{
   let l=+t.dataset.l,r=+t.dataset.r,c=+t.dataset.c;const L=MD.lots[l];
   const next=()=>{c++;if(c>=L.cols){c=0;r++;}if(r*L.cols+c>=L.qty||r>=L.rows){if(l+1<MD.lots.length){l++;r=0;c=0;}else return false;}return true;};
   const prev=()=>{c--;if(c<0){c=L.cols-1;r--;}if(r<0){if(l>0){l--;r=MD.lots[l].rows-1;c=MD.lots[l].cols-1;}else return false;}return true;};
+  if(e.key==='Delete'){e.preventDefault();t.value='';t.dispatchEvent(new Event('input',{bubbles:true}));return;}
   if(e.key==='Enter'){e.preventDefault();if(e.shiftKey?prev():next())mFocus(l,r,c);else if(!e.shiftKey){t.select();toast('마지막 칸입니다. 다 입력했으면 [입력한 로트 등록]을 누르세요');}return;}
   if(e.key==='ArrowDown'){e.preventDefault();if(!mFocus(l,r+1,c)&&l+1<MD.lots.length)mFocus(l+1,0,c);return;}
   if(e.key==='ArrowUp'){e.preventDefault();mFocus(l,Math.max(0,r-1),c);return;}
@@ -1439,7 +1457,9 @@ $('#mReg').onclick=()=>{
     lsl:sp.lsl,usl:sp.usl,values:p.nums,source:'직접 입력',createdAt:Date.now()+p.i});total+=p.nums.length;pass+=judgeCounts(p.nums,sp.lsl,sp.usl).pass;});
   MD.item=itemId;MD.lots.forEach(l=>l.vals=[]);DB.meta.lastChange=Date.now();DB.meta.draft=MD;save();
   mInit();refreshHeader();
-  $('#mRegMsg').innerHTML=`<b style="color:var(--good)">등록 완료</b> — 로트 ${pack.length}개, ${fint(total)}개, 합격률 ${pct(pass/total*100)} &nbsp;<button class="btn sm primary" id="mGoDash">대시보드에서 보기</button>`;
+  const newIds=DB.lots.slice(-pack.length).map(l=>l.id);
+  $('#mRegMsg').innerHTML=`<b style="color:var(--good)">등록 완료</b> — 로트 ${pack.length}개, ${fint(total)}개, 합격률 ${pct(pass/total*100)} &nbsp;<button class="btn sm primary" id="mGoDash">대시보드에서 보기</button> <button class="btn sm danger" id="mUndoReg">방금 등록 취소</button>`;
+  $('#mUndoReg').onclick=()=>{if(deleteLots(newIds))$('#mRegMsg').innerHTML='<span class="muted">등록을 취소했습니다.</span>';};
   $('#mGoDash').onclick=()=>{fillFilter();$('#fItem').value=itemId;runLotSel='__all';showTab('dash');};
   toast('등록했습니다');
 };
@@ -1490,7 +1510,8 @@ function makeReport(){
       (rows.length>1?`<tr style="font-weight:700;background:#f7f8fa"><td colspan="2">합계</td><td class="num">${fint(st.n)}</td><td class="num">${fint(st.pass)}</td><td class="num">${fint(st.over)}</td><td class="num">${fint(st.under)}</td><td class="num">${pct(st.rate)}</td><td class="num">${fmt(st.mean,d)}</td><td class="num">${fmt(st.sd,d+1)}</td><td class="num">${fmt(st.allMin,d)}</td><td class="num">${fmt(st.allMax,d)}</td></tr>`:'')+`</table>`
       ;
   const rk=(k,v,cls)=>`<div class="rkpi ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div></div>`;
-  const sign=$('#rpSign').checked?`<div class="sign"><table><tr><th>담당</th><th>검토</th><th>승인</th></tr><tr><td></td><td></td><td></td></tr></table></div>`:'';
+  const SIGN=['담당','검토','검토','검토','승인'];
+  const sign=$('#rpSign').checked?`<div class="sign"><table><tr>${SIGN.map(x=>`<th>${x}</th>`).join('')}</tr><tr>${SIGN.map(()=>'<td></td>').join('')}</tr></table></div>`:'';
   const co=DB.meta.company||'',lg=DB.meta.logo||'';
   const brand=$('#rpLogo').checked&&(co||lg)?`<div class="rlogo">${lg?`<img src="${lg}">`:''}<span>${esc(co)}</span></div>`:'';
   let p1=`<div class="page"><div class="rhead"><div style="flex:1">${brand}<h1 class="editable" contenteditable="true">${esc($('#rpTitle').value)}</h1></div>${sign}</div>
@@ -1524,8 +1545,27 @@ function makeReport(){
     ${$('#rpLotTbl').checked&&lots.length>1?`<h2 ${imgL?'':'style="margin-top:0"'}>6. 로트별 상세</h2>`+LOTTBL+(lots.some(l=>l.memo)?`<h2>특이사항</h2><ul>${lots.filter(l=>l.memo).map(l=>`<li>${l.date} ${esc(l.lotNo||'')}: ${esc(l.memo)}</li>`).join('')}</ul>`:''):''}
     <p style="font-size:9pt;color:#666;margin-top:14px">※ 합격 기준: 규격 하한 ≤ 측정값 ≤ 규격 상한. Cpk 1.33 이상 양호, 1.00 미만 공정능력 부족. 극단값은 규격 밖이면서 중앙값에서 표준편차 5배 넘게 떨어진 값.${excl?' 평균·표준편차·Cpk는 극단값을 빼고 계산함.':''}</p></div>`;
   }
-  $('#reportArea').innerHTML=p1+p2+p3;$('#rpTools').style.display='';
-  REP={it,st,A,rows,d,title:$('#rpTitle').value,period};
+  // 로우 데이터 (실측값 전체) — 쪽마다 정해진 줄 수로 나눠 넣는다
+  let pRaw='';
+  if($('#rpRaw').checked){
+    const COLS=10,PER=60;let first=true;
+    lots.forEach(l=>{
+      const v=l.values;const nRows=Math.ceil(v.length/COLS);const pages=Math.max(1,Math.ceil(nRows/PER));
+      for(let pg=0;pg<pages;pg++){
+        let t=`<table class="raw"><tr><th style="width:15%">번호</th>${Array.from({length:COLS},(_,c)=>`<th>${c+1}</th>`).join('')}</tr>`;
+        for(let r=pg*PER;r<Math.min(nRows,(pg+1)*PER);r++){
+          t+=`<tr><td class="ri">${fint(r*COLS+1)}~${fint(Math.min(v.length,(r+1)*COLS))}</td>`;
+          for(let c=0;c<COLS;c++){const k=r*COLS+c;if(k>=v.length){t+='<td></td>';continue;}const x=v[k];
+            const cls=(l.usl!=null&&x>l.usl)?'o':(l.lsl!=null&&x<l.lsl)?'u':'';t+=`<td class="${cls}">${fmt(x,d)}</td>`;}
+          t+='</tr>';}
+        t+='</table>';
+        pRaw+=`<div class="page">${pg===0?`<div class="rawh"><h2>${first?'부록. ':''}로우 데이터 — ${esc(l.date)} ${esc(l.lotNo||'')}</h2><span class="cap">${fint(v.length)}개 · 규격 ${specText(l.lsl,l.usl,u)} · <span style="color:#c8302f">■</span> 상한 초과 <span style="color:#9a6200">■</span> 하한 미달</span></div>`:`<div class="rawh"><span class="cap"><b>로우 데이터 — ${esc(l.date)} ${esc(l.lotNo||'')} (계속 ${pg+1}/${pages})</b></span></div>`}${t}</div>`;
+        first=false;
+      }
+    });
+  }
+  $('#reportArea').innerHTML=p1+p2+p3+pRaw;$('#rpTools').style.display='';
+  REP={it,st,A,rows,d,u,lots,title:$('#rpTitle').value,period,imgs:[imgH,imgR,imgS,imgL].filter(Boolean),insp};
   $('#rpTools').scrollIntoView({behavior:'smooth'});
 }
 function defaultAction(st,it){
@@ -1539,11 +1579,172 @@ $('#rpPrint').onclick=()=>window.print();
 $('#rpCopyText').onclick=()=>{if(!REP)return;const v=$('#reportArea .verdict').innerText;const a=$('#repAna').innerText;const c=$('#repAct').innerText;
   copyText(`[${REP.title}]\n검사 기간: ${REP.period}\n${v}\n\n■ 분석\n${a.split('\n').filter(x=>x.trim()).map(x=>'- '+x.trim()).join('\n')}\n\n■ 향후 조치\n${c.split('\n').filter(x=>x.trim()).map(x=>'- '+x.trim()).join('\n')}`);};
 $('#rpCopyTbl').onclick=()=>{if(!REP)return;const s=REP.st;copyText(`구분\t값\n검사 수량\t${s.n}\n합격\t${s.pass}\n상한 초과\t${s.over}\n하한 미달\t${s.under}\n합격률(%)\t${s.rate.toFixed(2)}\n평균\t${s.mean.toFixed(REP.d+1)}\n표준편차\t${s.sd.toFixed(REP.d+2)}\n최소\t${s.allMin}\n최대\t${s.allMax}\nCpk\t${s.cpk!=null?s.cpk.toFixed(3):''}\n\n`+lotTSV(REP.rows,REP.d));};
+function reportCSS(){return [...document.styleSheets[0].cssRules].map(r=>r.cssText).filter(t=>/^(\.page|\.rk|\.verdict|\.sign|\.editable|\.rhead|\.rlogo|@media print|@page)/.test(t)).join('\n');}
+function repFile(ext){return `${REP.title.replace(/[\\/:*?"<>|]/g,'_')}_${today()}.${ext}`;}
 $('#rpHtml').onclick=()=>{
-  if(!REP)return;const css=[...document.styleSheets[0].cssRules].map(r=>r.cssText).filter(t=>/^(\.page|\.rk|\.verdict|\.sign|\.editable|@media print|@page)/.test(t)).join('\n');
+  if(!REP)return;const css=reportCSS();
   const body=$('#reportArea').innerHTML.replace(/ contenteditable="true"/g,'');
   const html=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>${esc(REP.title)}</title><style>body{margin:0;background:#e9ebee;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;padding:20px 0}${css}\n@media print{body{background:#fff;padding:0}.page{box-shadow:none;margin:0}}</style></head><body>${body}</body></html>`;
-  download(`${REP.title.replace(/[\\/:*?"<>|]/g,'_')}_${today()}.html`,html,'text/html;charset=utf-8');
+  download(repFile('html'),html,'text/html;charset=utf-8');
+};
+
+/* =========================================================
+   보고서 → 엑셀(.xlsx) / 이미지(PNG)  (외부 라이브러리 없이 직접 만듦)
+   ========================================================= */
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zipStore(files){ // [{name,data:Uint8Array}] → 압축 없는 zip
+  const enc=new TextEncoder();const parts=[];const cd=[];let off=0;
+  for(const f of files){
+    const nm=enc.encode(f.name),d=f.data,crc=crc32(d);
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);
+    h.setUint32(14,crc,true);h.setUint32(18,d.length,true);h.setUint32(22,d.length,true);h.setUint16(26,nm.length,true);
+    parts.push(new Uint8Array(h.buffer),nm,d);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);
+    c.setUint32(16,crc,true);c.setUint32(20,d.length,true);c.setUint32(24,d.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    cd.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+d.length;
+  }
+  const cdSize=cd.reduce((a,b)=>a+b.length,0);
+  const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cdSize,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...cd,new Uint8Array(e.buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xesc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+// 스타일 번호: 0 기본 / 1 머리글 / 2 제목 / 3 굵게 / 4 상한초과 / 5 하한미달 / 6 줄바꿈 / 7 소제목
+const XSTYLES=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="6"><font><sz val="10"/><name val="맑은 고딕"/></font><font><b/><sz val="10"/><name val="맑은 고딕"/></font><font><b/><sz val="16"/><name val="맑은 고딕"/></font><font><b/><sz val="10"/><color rgb="FFC8302F"/><name val="맑은 고딕"/></font><font><b/><sz val="10"/><color rgb="FF9A6200"/><name val="맑은 고딕"/></font><font><b/><sz val="12"/><color rgb="FF1B64BE"/><name val="맑은 고딕"/></font></fonts>
+<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEEF1F5"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFDEEEE"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFFF4DC"/></patternFill></fill></fills>
+<borders count="2"><border/><border><left style="thin"><color rgb="FFBFC5CC"/></left><right style="thin"><color rgb="FFBFC5CC"/></right><top style="thin"><color rgb="FFBFC5CC"/></top><bottom style="thin"><color rgb="FFBFC5CC"/></bottom></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="8"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="3" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="4" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf><xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+function sheetXml(rows,opt){
+  opt=opt||{};let x=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">`;
+  if(opt.freeze)x+=`<sheetViews><sheetView workbookViewId="0"><pane ySplit="${opt.freeze}" topLeftCell="A${opt.freeze+1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>`;
+  if(opt.cols)x+='<cols>'+opt.cols.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols>';
+  x+='<sheetData>';
+  rows.forEach((row,r)=>{if(!row||!row.length)return;x+=`<row r="${r+1}">`;
+    row.forEach((cell,c)=>{if(cell==null||cell==='')return;const o=typeof cell==='object'?cell:{v:cell};const ref=colName(c)+(r+1);const st=o.s?` s="${o.s}"`:'';
+      if(typeof o.v==='number'&&isFinite(o.v))x+=`<c r="${ref}"${st}><v>${o.v}</v></c>`;
+      else x+=`<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xesc(o.v)}</t></is></c>`;});
+    x+='</row>';});
+  x+='</sheetData>';
+  if(opt.merges&&opt.merges.length)x+=`<mergeCells count="${opt.merges.length}">`+opt.merges.map(m=>`<mergeCell ref="${m}"/>`).join('')+'</mergeCells>';
+  if(opt.drawing)x+='<drawing r:id="rId1"/>';
+  return x+'</worksheet>';
+}
+function buildXlsx(sheets){ // [{name,rows,opt,images:[{png:Uint8Array,row,col,w,h}]}]
+  const enc=new TextEncoder();const F=[];const add=(n,t)=>F.push({name:n,data:typeof t==='string'?enc.encode(t):t});
+  let ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`;
+  let wb=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>`;
+  let wbr=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`;
+  let img=0;
+  sheets.forEach((sh,i)=>{const n=i+1;
+    ct+=`<Override PartName="/xl/worksheets/sheet${n}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
+    wb+=`<sheet name="${xesc(sh.name)}" sheetId="${n}" r:id="rId${n}"/>`;
+    wbr+=`<Relationship Id="rId${n}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${n}.xml"/>`;
+    const hasImg=sh.images&&sh.images.length;
+    add(`xl/worksheets/sheet${n}.xml`,sheetXml(sh.rows,{...(sh.opt||{}),drawing:hasImg}));
+    if(hasImg){
+      ct+=`<Override PartName="/xl/drawings/drawing${n}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`;
+      add(`xl/worksheets/_rels/sheet${n}.xml.rels`,`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${n}.xml"/></Relationships>`);
+      let dr=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">`;
+      let drr=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`;
+      sh.images.forEach((im,k)=>{img++;add(`xl/media/image${img}.png`,im.png);
+        drr+=`<Relationship Id="rId${k+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image${img}.png"/>`;
+        dr+=`<xdr:oneCellAnchor><xdr:from><xdr:col>${im.col||0}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${im.row}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:ext cx="${Math.round(im.w*9525)}" cy="${Math.round(im.h*9525)}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${k+2}" name="그림 ${k+1}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${k+1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`;});
+      add(`xl/drawings/drawing${n}.xml`,dr+'</xdr:wsDr>');add(`xl/drawings/_rels/drawing${n}.xml.rels`,drr+'</Relationships>');
+    }
+  });
+  add('[Content_Types].xml',ct+'</Types>');
+  add('_rels/.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`);
+  add('xl/workbook.xml',wb+'</sheets></workbook>');
+  add('xl/_rels/workbook.xml.rels',wbr+`<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+  add('xl/styles.xml',XSTYLES);
+  return zipStore(F);
+}
+function dataUrlBytes(u){const b=atob(u.split(',')[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+function imgSize(u){return new Promise(r=>{const im=new Image();im.onload=()=>r({w:im.naturalWidth,h:im.naturalHeight});im.onerror=()=>r({w:1440,h:540});im.src=u;});}
+function linesOf(el){if(!el)return [];const li=[...el.querySelectorAll('li')].map(x=>x.innerText.trim()).filter(Boolean);return li.length?li:el.innerText.split('\n').map(x=>x.trim()).filter(Boolean);}
+$('#rpXlsx').onclick=async()=>{
+  if(!REP)return;const R=REP,s=R.st,d=R.d,u=R.u||'';const H=v=>({v,s:1}),B=v=>({v,s:3}),SUB=v=>({v,s:7});
+  const title=($('#reportArea h1')||{}).innerText||R.title;
+  // 1) 보고서 시트
+  const rows=[];
+  rows.push([{v:title,s:2}]);
+  rows.push([`${DB.meta.company||''}   보고일 ${$('#rpDate').value}   작성 ${$('#rpAuthor').value||'-'}   검사 기간 ${R.period}`]);
+  rows.push([]);
+  rows.push([SUB('1. 검사 개요')]);
+  rows.push([H('품목'),itemLabel(R.it),H('측정 항목'),`${R.it.prop||'-'} (${u||'-'})`]);
+  rows.push([H('규격'),specText(s.lsl,s.usl,u),H('검사 방식'),'전수검사']);
+  rows.push([H('검사 로트'),R.lots.length+'개',H('검사자'),R.insp||'-']);
+  rows.push([]);
+  rows.push([SUB('2. 검사 결과')]);
+  rows.push([H('검사 수량'),H('합격'),H('상한 초과'),H('하한 미달'),H('합격률(%)'),H('평균'),H('표준편차'),H('최소'),H('최대'),H('Cpk')]);
+  rows.push([s.n,s.pass,s.over,s.under,+s.rate.toFixed(2),+s.mean.toFixed(d+1),+s.sd.toFixed(d+2),s.allMin,s.allMax,s.cpk!=null?+s.cpk.toFixed(3):'-']);
+  rows.push([]);
+  rows.push([SUB('3. 분석 및 판정')]);
+  rows.push([B(($('#reportArea .verdict')||{}).innerText||R.A.verdict)]);
+  linesOf($('#repAna')).forEach(t=>rows.push(['· '+t]));
+  rows.push([]);
+  rows.push([SUB('4. 향후 조치')]);
+  linesOf($('#repAct')).forEach(t=>rows.push(['· '+t]));
+  rows.push([]);
+  rows.push([SUB('5. 그래프')]);
+  const images=[];let at=rows.length;
+  for(const url of R.imgs){const sz=await imgSize(url);const w=760,h=Math.round(sz.h*w/sz.w);images.push({png:dataUrlBytes(url),row:at,col:0,w,h});at+=Math.ceil(h/20)+1;}
+  // 2) 로트별 상세
+  const lot=[[H('검사일'),H('로트'),H('검사자'),H('규격 하한'),H('규격 상한'),H('수량'),H('합격'),H('상한 초과'),H('하한 미달'),H('합격률(%)'),H('평균'),H('표준편차'),H('최소'),H('최대'),H('Cpk'),H('메모')]];
+  R.rows.forEach(r=>lot.push([r.lot.date,r.lot.lotNo||'',r.lot.inspector||'',r.lot.lsl??'',r.lot.usl??'',r.n,r.pass,r.over,r.under,+r.rate.toFixed(2),+r.mean.toFixed(d+1),+r.sd.toFixed(d+2),r.min,r.max,r.cpk!=null?+r.cpk.toFixed(3):'',r.lot.memo||'']));
+  if(R.rows.length>1)lot.push([B('합계'),'','','','',B(s.n),B(s.pass),B(s.over),B(s.under),B(+s.rate.toFixed(2)),+s.mean.toFixed(d+1),+s.sd.toFixed(d+2),s.allMin,s.allMax,'','']);
+  // 3) 로우 데이터 (표 모양: 한 줄 10개)  4) 로우 데이터 (목록)
+  const grid=[];const list=[[H('검사일'),H('로트'),H('순번'),H('측정값'),H('판정')]];
+  R.lots.forEach((l,li)=>{
+    if(li)grid.push([]);
+    grid.push([B(`${l.date} ${l.lotNo||''}  (${l.values.length}개, 규격 ${specText(l.lsl,l.usl,u)})`)]);
+    grid.push([H('번호'),...Array.from({length:10},(_,c)=>H(c+1))]);
+    for(let r=0;r*10<l.values.length;r++){const row=[`${r*10+1}~${Math.min(l.values.length,(r+1)*10)}`];
+      for(let c=0;c<10;c++){const k=r*10+c;if(k>=l.values.length)break;const x=l.values[k];row.push((l.usl!=null&&x>l.usl)?{v:x,s:4}:(l.lsl!=null&&x<l.lsl)?{v:x,s:5}:x);}grid.push(row);}
+    l.values.forEach((x,k)=>{const j=(l.usl!=null&&x>l.usl)?'상한 초과':(l.lsl!=null&&x<l.lsl)?'하한 미달':'합격';list.push([l.date,l.lotNo||'',k+1,j==='합격'?x:{v:x,s:j==='상한 초과'?4:5},j]);});
+  });
+  const blob=buildXlsx([
+    {name:'보고서',rows,opt:{cols:[14,26,14,26,12,12,12,12,12,10]},images},
+    {name:'로트별 상세',rows:lot,opt:{freeze:1,cols:[12,18,10,10,10,9,9,10,10,11,10,10,9,9,8,24]}},
+    {name:'로우 데이터(표)',rows:grid,opt:{cols:[13,9,9,9,9,9,9,9,9,9,9]}},
+    {name:'로우 데이터(목록)',rows:list,opt:{freeze:1,cols:[12,18,8,11,11]}},
+  ]);
+  download(repFile('xlsx'),blob);toast('엑셀 파일을 저장했습니다');
+};
+// 보고서 쪽을 그림으로: SVG foreignObject 로 그려 캔버스에 옮김
+async function pageCanvas(pg,scale){
+  const w=pg.offsetWidth,h=pg.offsetHeight;const cl=pg.cloneNode(true);
+  cl.querySelectorAll('[contenteditable]').forEach(e=>e.removeAttribute('contenteditable'));
+  cl.style.margin='0';cl.style.boxShadow='none';cl.style.width=w+'px';cl.style.minHeight=h+'px';
+  const xhtml=new XMLSerializer().serializeToString(cl);
+  const css=reportCSS().replace(/@media print\{[\s\S]*?\}\s*\}/g,'');
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject x="0" y="0" width="${w}" height="${h}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#111"><style>*{box-sizing:border-box}${css}</style>${xhtml}</div></foreignObject></svg>`;
+  const im=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);await im.decode();
+  const cv=document.createElement('canvas');cv.width=Math.round(w*scale);cv.height=Math.round(h*scale);const ctx=cv.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.scale(scale,scale);ctx.drawImage(im,0,0,w,h);return cv;
+}
+async function reportPages(){const pgs=[...document.querySelectorAll('#reportArea .page')];const out=[];for(const p of pgs)out.push(await pageCanvas(p,2));return out;}
+$('#rpPng').onclick=async()=>{
+  if(!REP)return;toast('이미지를 만드는 중입니다…');
+  try{const cs=await reportPages();const gap=24;const W=Math.max(...cs.map(c=>c.width)),H=cs.reduce((a,c)=>a+c.height,0)+gap*(cs.length-1);
+    if(H>32000)throw new Error('쪽 수가 많아 한 장 이미지 한도를 넘습니다. [이미지로 저장 (쪽마다)]를 이용하세요.');
+    const cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');ctx.fillStyle='#d5d8dd';ctx.fillRect(0,0,W,H);
+    let y=0;for(const c of cs){ctx.drawImage(c,0,y);y+=c.height+gap;}
+    cv.toBlob(b=>{download(repFile('png'),b);toast('이미지를 저장했습니다');},'image/png');
+  }catch(e){alert('이미지 저장 실패: '+e.message);}
+};
+$('#rpPngPages').onclick=async()=>{
+  if(!REP)return;toast('이미지를 만드는 중입니다…');
+  try{const cs=await reportPages();const base=repFile('png').replace(/\.png$/,'');
+    const files=[];for(let i=0;i<cs.length;i++){const b=await new Promise(r=>cs[i].toBlob(r,'image/png'));files.push({name:`${base}_${String(i+1).padStart(2,'0')}쪽.png`,data:new Uint8Array(await b.arrayBuffer())});}
+    if(files.length===1){download(files[0].name,new Blob([files[0].data],{type:'image/png'}));}
+    else{const z=zipStore(files);download(base+'_쪽별이미지.zip',new Blob([z],{type:'application/zip'}));}
+    toast(`${cs.length}쪽을 이미지로 저장했습니다`);
+  }catch(e){alert('이미지 저장 실패: '+e.message);}
 };
 
 /* =========================================================
@@ -1564,20 +1765,74 @@ function renderData(){
     $('#storeInfo').innerHTML=`저장 사용량 약 ${(used/1024/1024).toFixed(2)}MB / 브라우저 한도 약 5MB · 마지막 백업: ${DB.meta.lastBackup?new Date(DB.meta.lastBackup).toLocaleString('ko-KR'):'없음'}`;
   }
   if(!lots.length){$('#lotTable').innerHTML='<div class="empty">등록된 로트가 없습니다.</div>';return;}
-  $('#lotTable').innerHTML=`<table class="tbl"><thead><tr><th>검사일</th><th>품목</th><th>로트</th><th>검사자</th><th>라인</th><th>규격</th><th class="num">수량</th><th class="num">합격률</th><th>입력</th><th>메모</th><th></th></tr></thead><tbody>`+
+  $('#lotTable').innerHTML=`<table class="tbl"><thead><tr><th style="width:30px"><input type="checkbox" id="dmAll" title="전체 선택"></th><th>검사일</th><th>품목</th><th>로트</th><th>검사자</th><th>라인</th><th>규격</th><th class="num">수량</th><th class="num">합격률</th><th>입력</th><th>메모</th><th></th></tr></thead><tbody>`+
     lots.map(l=>{const it=itemById(l.itemId);const j=judgeCounts(l.values,l.lsl,l.usl);const r=j.pass/l.values.length*100;
-      return `<tr><td>${l.date}</td><td>${esc(itemLabel(it))}</td><td>${esc(l.lotNo||'')}</td><td>${esc(l.inspector||'')}</td><td>${esc(l.line||'')}</td><td>${specText(l.lsl,l.usl,it&&it.unit)}</td><td class="num">${fint(l.values.length)}</td><td class="num"><span class="badge ${rateClass(r,it&&it.targetRate)}">${pct(r)}</span></td><td class="small muted">${esc(l.source||'')}</td><td class="small">${esc(l.memo||'')}</td>
-      <td style="white-space:nowrap"><button class="btn sm" data-view="${l.id}">보기</button> <button class="btn sm" data-edit="${l.id}">수정</button> <button class="btn sm" data-cpv="${l.id}">값 복사</button> <button class="btn sm danger" data-del="${l.id}">삭제</button></td></tr>`;}).join('')+'</tbody></table>';
+      return `<tr><td><input type="checkbox" class="dmChk" value="${l.id}"></td><td>${l.date}</td><td>${esc(itemLabel(it))}</td><td>${esc(l.lotNo||'')}</td><td>${esc(l.inspector||'')}</td><td>${esc(l.line||'')}</td><td>${specText(l.lsl,l.usl,it&&it.unit)}</td><td class="num">${fint(l.values.length)}</td><td class="num"><span class="badge ${rateClass(r,it&&it.targetRate)}">${pct(r)}</span></td><td class="small muted">${esc(l.source||'')}</td><td class="small">${esc(l.memo||'')}</td>
+      <td style="white-space:nowrap"><button class="btn sm" data-view="${l.id}">보기</button> <button class="btn sm" data-edit="${l.id}">정보 수정</button> <button class="btn sm" data-vedit="${l.id}">값 수정</button> <button class="btn sm" data-cpv="${l.id}">값 복사</button> <button class="btn sm danger" data-del="${l.id}">삭제</button></td></tr>`;}).join('')+'</tbody></table>';
 }
 $('#dmItem').addEventListener('change',renderData);
+function dmSel(){const ids=$$('.dmChk:checked').map(c=>c.value);$('#dmDelSel').disabled=!ids.length;$('#dmDelSel').textContent=ids.length?`선택한 로트 삭제 (${ids.length})`:'선택한 로트 삭제';return ids;}
+$('#lotTable').addEventListener('change',e=>{if(e.target.id==='dmAll')$$('.dmChk').forEach(c=>c.checked=e.target.checked);dmSel();});
+$('#dmDelSel').onclick=()=>{const ids=dmSel();if(ids.length)deleteLots(ids);};
+// 로트 삭제 (여러 개 가능). 지운 직후 [되돌리기] 제공
+let lastDeleted=null;
+function deleteLots(ids,noConfirm){
+  const ls=DB.lots.filter(l=>ids.includes(l.id));if(!ls.length)return false;
+  const n=ls.reduce((a,l)=>a+l.values.length,0);
+  if(!noConfirm&&!confirm(`${ls.length===1?`${ls[0].date} ${ls[0].lotNo||''}`:`로트 ${ls.length}개`} (측정값 ${fint(n)}개)를 삭제할까요?`))return false;
+  lastDeleted=ls.map(l=>({l,idx:DB.lots.indexOf(l)}));
+  DB.lots=DB.lots.filter(l=>!ids.includes(l.id));DB.meta.lastChange=Date.now();save();refreshHeader();
+  if($('#p-data').classList.contains('on'))renderData();if($('#p-dash').classList.contains('on'))renderDash();
+  undoToast(`로트 ${ls.length}개를 삭제했습니다.`);return true;
+}
+function undoToast(msg){
+  const t=$('#toast');t.innerHTML=`${esc(msg)} <button class="btn sm" style="margin-left:10px" id="undoDel">되돌리기</button>`;t.style.display='block';t.style.pointerEvents='auto';
+  clearTimeout(t._h);t._h=setTimeout(()=>{t.style.display='none';},8000);
+  $('#undoDel').onclick=()=>{if(!lastDeleted)return;lastDeleted.sort((a,b)=>a.idx-b.idx).forEach(o=>DB.lots.splice(Math.min(o.idx,DB.lots.length),0,o.l));lastDeleted=null;
+    DB.meta.lastChange=Date.now();save();refreshHeader();t.style.display='none';
+    if($('#p-data').classList.contains('on'))renderData();if($('#p-dash').classList.contains('on'))renderDash();toast('되돌렸습니다');};
+}
+// 측정값 한 칸씩 고치기·지우기
+function editValues(id){
+  const l=DB.lots.find(x=>x.id===id);const COLS=10;let v=l.values.map(x=>String(x));
+  const draw=()=>{const rows=Math.ceil(v.length/COLS)||1;let h=`<table class="mgrid"><thead><tr><th class="corner">번호</th>${Array.from({length:COLS},(_,c)=>`<th>${c+1}</th>`).join('')}</tr></thead><tbody>`;
+    for(let r=0;r<rows;r++){h+=`<tr><td class="rh">${r*COLS+1}~</td>`;for(let c=0;c<COLS;c++){const k=r*COLS+c;
+      if(k>=v.length){h+='<td><input class="off" disabled></td>';continue;}const n=numOf(v[k]);
+      const cls=v[k]===''?'':n==null?'err':(l.usl!=null&&n>l.usl)?'over':(l.lsl!=null&&n<l.lsl)?'under':'';
+      h+=`<td><input data-k="${k}" value="${esc(v[k])}" class="${cls}" title="${k+1}번째"></td>`;}h+='</tr>';}
+    $('#veGrid').innerHTML=h+'</tbody></table>';cnt();};
+  const cnt=()=>{const keep=v.filter(x=>x.trim()!=='').length;$('#veCnt').innerHTML=`전체 ${fint(v.length)}칸 · 남길 값 <b>${fint(keep)}</b>개`+(v.length-keep?` · <b style="color:var(--bad)">지울 값 ${fint(v.length-keep)}개</b>`:'');};
+  openModal(`<h2>측정값 수정 — ${esc(l.date)} ${esc(l.lotNo||'')}</h2>
+    <p class="hint" style="margin-top:-6px">칸을 고치면 값이 바뀌고, 칸을 비우면(Delete) 그 값은 삭제됩니다. 빨간 칸은 상한 초과, 노란 칸은 하한 미달입니다.</p>
+    <div class="row" style="margin-bottom:8px;align-items:center"><span class="small" id="veCnt"></span>
+      <button class="btn sm" id="veOut" style="margin-left:auto">극단값(측정 오류 의심) 비우기</button></div>
+    <div class="mgrid-wrap" id="veGrid" style="max-height:52vh;border:1px solid var(--line);border-radius:8px"></div>
+    <div class="row" style="justify-content:space-between;margin-top:12px"><button class="btn danger" id="veDelLot">이 로트 통째로 삭제</button>
+      <span><button class="btn" onclick="closeModal()">취소</button> <button class="btn primary" id="veSave">저장</button></span></div>`);
+  $('#modalBody').style.width='min(980px,96vw)';
+  draw();
+  $('#veGrid').addEventListener('input',e=>{const k=e.target.dataset.k;if(k==null)return;v[+k]=e.target.value.trim();const n=numOf(v[+k]);
+    e.target.className=v[+k]===''?'':n==null?'err':(l.usl!=null&&n>l.usl)?'over':(l.lsl!=null&&n<l.lsl)?'under':'';cnt();});
+  $('#veGrid').addEventListener('keydown',e=>{if(e.key==='Delete'&&e.target.dataset.k!=null){e.target.value='';e.target.dispatchEvent(new Event('input',{bubbles:true}));}});
+  $('#veOut').onclick=()=>{const st=calc([l]);if(!st.outliers.length){toast('극단값이 없습니다');return;}
+    if(!confirm(`극단값 ${st.outliers.length}개 (${st.outliers.slice(0,5).map(o=>o.v).join(', ')}${st.outliers.length>5?' …':''})를 비울까요? 저장을 눌러야 반영됩니다.`))return;
+    st.outliers.forEach(o=>v[o.i]='');draw();};
+  $('#veDelLot').onclick=()=>{closeModal();$('#modalBody').style.width='';deleteLots([l.id]);};
+  $('#veSave').onclick=()=>{
+    const bad=v.filter(x=>x!==''&&numOf(x)==null).length;if(bad){alert(`숫자가 아닌 칸이 ${bad}개 있습니다.`);return;}
+    const nv=v.filter(x=>x!=='').map(numOf);if(!nv.length){if(confirm('값이 하나도 남지 않습니다. 이 로트를 삭제할까요?')){closeModal();deleteLots([l.id],true);}return;}
+    const removed=l.values.length-nv.length;l.values=nv;DB.meta.lastChange=Date.now();save();closeModal();$('#modalBody').style.width='';
+    ($('#p-dash').classList.contains('on')?renderDash():renderData());toast(removed>0?`저장했습니다 (값 ${removed}개 삭제)`:'저장했습니다');};
+}
 $('#lotTable').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.del){const l=DB.lots.find(x=>x.id===b.dataset.del);if(confirm(`${l.date} ${l.lotNo||''} (${l.values.length}개) 로트를 삭제할까요?\n되돌릴 수 없습니다.`)){DB.lots=DB.lots.filter(x=>x.id!==l.id);DB.meta.lastChange=Date.now();save();renderData();toast('삭제했습니다');}}
+  if(b.dataset.del){deleteLots([b.dataset.del]);}
+  if(b.dataset.vedit)editValues(b.dataset.vedit);
   if(b.dataset.view){const l=DB.lots.find(x=>x.id===b.dataset.view);fillFilter();$('#fItem').value=l.itemId;runLotSel=l.id;showTab('dash');}
   if(b.dataset.cpv){const l=DB.lots.find(x=>x.id===b.dataset.cpv);copyText(l.values.join('\n'));}
   if(b.dataset.edit)editLot(b.dataset.edit);
 });
-function openModal(html){$('#modalBody').innerHTML=html;$('#modal').classList.add('on');}
+function openModal(html){$('#modalBody').style.width='';$('#modalBody').innerHTML=html;$('#modal').classList.add('on');}
 function closeModal(){$('#modal').classList.remove('on');}
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
 function editLot(id){
@@ -1587,12 +1842,11 @@ function editLot(id){
   <div class="row"><div class="field"><label>로트 번호</label><input type="text" id="eLot" value="${esc(l.lotNo||'')}"></div><div class="field"><label>검사자</label><input type="text" id="eInsp" value="${esc(l.inspector||'')}"></div><div class="field"><label>라인/설비</label><input type="text" id="eLine" value="${esc(l.line||'')}"></div></div>
   <div class="row"><div class="field"><label>규격 하한</label><input type="number" step="any" id="eLsl" value="${l.lsl??''}"></div><div class="field"><label>규격 상한</label><input type="number" step="any" id="eUsl" value="${l.usl??''}"></div></div>
   <div class="field" style="margin-bottom:12px"><label>메모</label><input type="text" id="eMemo" value="${esc(l.memo||'')}"></div>
-  <div class="field" style="margin-bottom:12px"><label>측정값 (${l.values.length}개, 한 줄에 하나 — 고치면 그대로 반영)</label><textarea id="eVals" rows="6">${l.values.join('\n')}</textarea></div>
+  <p class="hint">측정값(${fint(l.values.length)}개)을 고치거나 지우려면 목록의 [값 수정]을 누르세요.</p>
   <div class="row" style="justify-content:flex-end"><button class="btn" onclick="closeModal()">취소</button><button class="btn primary" id="eSave">저장</button></div>`);
   $('#eSave').onclick=()=>{
-    const vals=$('#eVals').value.split(/[\s,;]+/).map(numOf).filter(v=>v!=null);if(!vals.length){alert('측정값이 비었습니다.');return;}
     const a=$('#eLsl').value.trim(),b=$('#eUsl').value.trim();
-    Object.assign(l,{itemId:$('#eItem').value,date:$('#eDate').value,lotNo:$('#eLot').value.trim(),inspector:$('#eInsp').value.trim(),line:$('#eLine').value.trim(),memo:$('#eMemo').value.trim(),lsl:a===''?null:+a,usl:b===''?null:+b,values:vals});
+    Object.assign(l,{itemId:$('#eItem').value,date:$('#eDate').value,lotNo:$('#eLot').value.trim(),inspector:$('#eInsp').value.trim(),line:$('#eLine').value.trim(),memo:$('#eMemo').value.trim(),lsl:a===''?null:+a,usl:b===''?null:+b});
     DB.meta.lastChange=Date.now();save();closeModal();renderData();toast('저장했습니다');};
 }
 function doBackup(){
